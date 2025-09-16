@@ -1,0 +1,9 @@
+langchain
+langchain-ollama
+langchain-chroma
+pandas
+pypdf
+langchain-community
+unstructured
+python-docx
+tabulate
