@@ -12,26 +12,38 @@ vector_store = Chroma(
     embedding_function=embeddings
 )
 
-if not os.path.exists(db_location) or vector_store._collection.count() == 0:
-    attachments_dir = "attachments"
-    all_documents = []
-    for filename in os.listdir(attachments_dir):
-        file_path = os.path.join(attachments_dir, filename)
-        if filename.endswith(".pdf"):
-            loader = PyPDFLoader(file_path)
-            documents = loader.load_and_split()
-        elif filename.endswith(".csv"):
-            loader = CSVLoader(file_path)
-            documents = loader.load()
-        elif filename.endswith(".docx"):
-            loader = UnstructuredWordDocumentLoader(file_path)
-            documents = loader.load_and_split()
-        else:
-            continue
-        all_documents.extend(documents)
-    
-    if all_documents:
-        vector_store.add_documents(documents=all_documents)
+# Get the list of already processed files from the vector store
+processed_files = set()
+if os.path.exists(db_location) and vector_store._collection.count() > 0:
+    existing_docs = vector_store.get()
+    if "metadatas" in existing_docs:
+        for metadata in existing_docs["metadatas"]:
+            if "source" in metadata:
+                processed_files.add(metadata["source"])
+
+attachments_dir = "attachments"
+all_documents = []
+for filename in os.listdir(attachments_dir):
+    file_path = os.path.join(attachments_dir, filename)
+    if file_path in processed_files:
+        continue
+
+    if filename.endswith(".pdf"):
+        loader = PyPDFLoader(file_path)
+        documents = loader.load_and_split()
+    elif filename.endswith(".csv"):
+        loader = CSVLoader(file_path)
+        documents = loader.load()
+    elif filename.endswith(".docx"):
+        loader = UnstructuredWordDocumentLoader(file_path)
+        documents = loader.load_and_split()
+    else:
+        continue
+    all_documents.extend(documents)
+
+if all_documents:
+    vector_store.add_documents(documents=all_documents)
+
 
 retriever = vector_store.as_retriever(
     search_kwargs={"k": 5}

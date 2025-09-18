@@ -5,9 +5,9 @@ from vector import retriever
 model = OllamaLLM(model="phi3")
 
 template = """
-You are an exeprt in answering questions about a pizza restaurant
+You are an expert in answering questions.
 
-Here are some relevant reviews: {reviews}
+Here are some of information you can fetch: {reviews}
 
 Here is the question to answer: {question}
 """
@@ -21,7 +21,7 @@ chain = prompt | model
 #     if question == "q":
 #         break
     
-question = "What is the best pizza?"
+question = "what is resource pooling"
 reviews = retriever.invoke(question)
 result = chain.invoke({"reviews": reviews, "question": question})
 print(result)
