@@ -3,9 +3,14 @@ from langchain_chroma import Chroma
 from langchain_community.document_loaders import PyPDFLoader, CSVLoader, UnstructuredWordDocumentLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import os
+import shutil
 
 embeddings = OllamaEmbeddings(model="bge-m3")
 db_location = "./chrome_langchain_db"
+
+if os.path.exists(db_location):
+    shutil.rmtree(db_location)
+
 vector_store = Chroma(
     collection_name="restaurant_reviews",
     persist_directory=db_location,
@@ -21,6 +26,8 @@ if os.path.exists(db_location) and vector_store._collection.count() > 0:
             if "source" in metadata:
                 processed_files.add(metadata["source"])
 
+
+
 attachments_dir = "attachments"
 all_documents = []
 for filename in os.listdir(attachments_dir):
@@ -28,16 +35,24 @@ for filename in os.listdir(attachments_dir):
     if file_path in processed_files:
         continue
 
+    print(f"Processing file: {filename}")
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     if filename.endswith(".pdf"):
         loader = PyPDFLoader(file_path)
         documents = loader.load_and_split()
+        print(f"Loaded {len(documents)} documents from {filename}")
     elif filename.endswith(".csv"):
         loader = CSVLoader(file_path)
         documents = loader.load()
+        documents = text_splitter.split_documents(documents)
+        print(f"Loaded {len(documents)} documents from {filename}")
     elif filename.endswith(".docx"):
         loader = UnstructuredWordDocumentLoader(file_path)
-        documents = loader.load_and_split()
+        documents = loader.load()
+        documents = text_splitter.split_documents(documents)
+        print(f"Loaded {len(documents)} documents from {filename}")
     else:
+        print(f"Skipping file: {filename}")
         continue
     all_documents.extend(documents)
 
