@@ -98,6 +98,7 @@ class Profile(BaseModel):
     hint: Optional[str] = None  # Optional hint for PIN
     is_guest: bool = False
     created_at: str
+    has_pin: bool = False  # Indicates if profile is PIN-protected (safe to send to frontend)
 
 class CreateProfileRequest(BaseModel):
     name: str
@@ -783,8 +784,9 @@ async def get_all_profiles():
     """
     try:
         profiles = load_profiles()
-        # Remove PIN from response for security
+        # Set has_pin flag and remove PIN from response for security
         for profile in profiles:
+            profile.has_pin = profile.pin is not None and profile.pin != ""
             profile.pin = None
         return profiles
     except Exception as e:
@@ -797,7 +799,8 @@ async def create_new_profile(request: CreateProfileRequest):
     """
     try:
         profile = create_profile(request.name, request.pin, request.hint)
-        # Remove PIN from response for security
+        # Set has_pin flag and remove PIN from response for security
+        profile.has_pin = profile.pin is not None and profile.pin != ""
         profile.pin = None
         return profile
     except Exception as e:

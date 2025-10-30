@@ -127,7 +127,7 @@ function createProfileItem(profile) {
     div.onclick = () => selectProfile(profile);
 
     const initial = profile.name.charAt(0).toUpperCase();
-    const hasPin = profile.pin !== null && profile.pin !== undefined;
+    const hasPin = profile.has_pin === true;
     const guestClass = profile.is_guest ? 'guest' : '';
 
     div.innerHTML = `
@@ -148,7 +148,7 @@ function createProfileItem(profile) {
 
 async function selectProfile(profile) {
     // Check if PIN is required
-    if (profile.pin) {
+    if (profile.has_pin) {
         selectedProfileForPin = profile;
         showPinModal(profile);
     } else {
