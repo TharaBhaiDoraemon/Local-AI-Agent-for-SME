@@ -318,12 +318,12 @@ body {
 
 .chat-item:hover {
     border-color: var(--primary-color);
-    background: white;
+    background: var(--surface);
 }
 
 .chat-item.active {
     border-color: var(--primary-color);
-    background: white;
+    background: var(--surface);
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
@@ -394,7 +394,7 @@ body {
 }
 
 .group-header:hover {
-    background: white;
+    background: var(--surface);
 }
 
 .group-header-left {
