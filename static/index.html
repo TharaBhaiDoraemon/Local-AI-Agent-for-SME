@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local AI Agent for SME</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <!-- Profile Selection Modal -->
+    <div id="profile-modal" class="modal show">
+        <div class="modal-content">
+            <h2>Select Profile</h2>
+            <div id="profile-list" class="profile-list"></div>
+            <button id="create-profile-btn" class="btn-primary">Create New Profile</button>
+        </div>
+    </div>
+
+    <!-- Profile Creation Modal -->
+    <div id="create-profile-modal" class="modal">
+        <div class="modal-content">
+            <h2>Create Profile</h2>
+            <form id="create-profile-form">
+                <div class="form-group">
+                    <label for="profile-name">Name</label>
+                    <input type="text" id="profile-name" required placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                    <label for="profile-pin">
+                        PIN/Password (Optional)
+                        <span class="hint-text">Leave empty for no password</span>
+                    </label>
+                    <input type="password" id="profile-pin" placeholder="Enter PIN or password">
+                </div>
+                <div class="form-group">
+                    <label for="profile-hint">Hint (Optional)</label>
+                    <input type="text" id="profile-hint" placeholder="Hint for your password">
+                </div>
+                <div id="transfer-chats-option" class="form-group" style="display: none;">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="transfer-chats" checked>
+                        <label for="transfer-chats" class="checkbox-label">
+                            Transfer current guest chats to new profile and clear guest account
+                        </label>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="cancel-profile-btn" class="btn-secondary">Cancel</button>
+                    <button type="submit" class="btn-primary">Create Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- PIN Entry Modal -->
+    <div id="pin-modal" class="modal">
+        <div class="modal-content">
+            <h2>Enter PIN</h2>
+            <p id="pin-profile-name" class="profile-name-display"></p>
+            <form id="pin-form">
+                <div class="form-group">
+                    <input type="password" id="pin-input" required placeholder="Enter your PIN">
+                </div>
+                <p id="pin-error" class="error-text"></p>
+                <div class="form-actions">
+                    <button type="button" id="show-hint-btn" class="btn-link">Show Hint</button>
+                    <button type="button" id="cancel-pin-btn" class="btn-secondary">Cancel</button>
+                    <button type="submit" class="btn-primary">Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Local AI Agent for SME</h1>
+            <p class="subtitle">Ask questions about your documents using local AI</p>
+            <div class="status-bar">
+                <span id="current-profile" class="current-profile">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <span id="profile-name-display">Loading...</span>
+                    <button id="switch-profile-btn" class="icon-btn-small" title="Switch Profile">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="17 1 21 5 17 9"></polyline>
+                            <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                            <polyline points="7 23 3 19 7 15"></polyline>
+                            <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                        </svg>
+                    </button>
+                </span>
+                <span id="status" class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Loading...</span>
+                </span>
+                <span id="doc-count" class="doc-count">0 documents</span>
+                <button id="dark-mode-btn" class="dark-mode-btn" title="Toggle dark mode">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+                <div class="theme-selector">
+                    <button id="theme-btn" class="theme-btn" title="Change theme">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3m15.4-6.4l-4.2 4.2m0 0L9.6 18.4m4.2-4.2l4.2 4.2m0-12.8l-4.2 4.2"></path>
+                        </svg>
+                    </button>
+                    <div id="theme-dropdown" class="theme-dropdown">
+                        <div class="theme-dropdown-header">Accent Colors</div>
+                        <div class="theme-colors">
+                            <div class="theme-color active" data-theme="blue" title="Blue"></div>
+                            <div class="theme-color" data-theme="purple" title="Purple"></div>
+                            <div class="theme-color" data-theme="green" title="Green"></div>
+                            <div class="theme-color" data-theme="orange" title="Orange"></div>
+                            <div class="theme-color" data-theme="pink" title="Pink"></div>
+                            <div class="theme-color" data-theme="teal" title="Teal"></div>
+                            <div class="theme-color" data-theme="red" title="Red"></div>
+                            <div class="theme-color" data-theme="indigo" title="Indigo"></div>
+                            <div class="theme-color" data-theme="emerald" title="Emerald"></div>
+                            <div class="theme-color" data-theme="amber" title="Amber"></div>
+                            <div class="theme-color" data-theme="cyan" title="Cyan"></div>
+                        </div>
+
+                        <div class="theme-section-divider"></div>
+                        <div class="theme-section-label">Dark Mode Shades</div>
+                        <div class="theme-colors">
+                            <div class="theme-color" data-theme="slate" title="Slate"></div>
+                            <div class="theme-color" data-theme="zinc" title="Zinc"></div>
+                            <div class="theme-color" data-theme="stone" title="Stone"></div>
+                            <div class="theme-color" data-theme="gray" title="Gray"></div>
+                            <div class="theme-color" data-theme="neutral" title="Neutral"></div>
+                            <div class="theme-color" data-theme="charcoal" title="Charcoal"></div>
+                            <div class="theme-color" data-theme="midnight" title="Midnight"></div>
+                            <div class="theme-color" data-theme="onyx" title="Onyx"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <!-- Chat History Section -->
+                <div class="sidebar-section">
+                    <div class="section-header">
+                        <h2>Chat History</h2>
+                        <div class="header-actions">
+                            <button id="new-group-btn" class="icon-btn" title="New Group">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="14" width="7" height="7"></rect>
+                                    <rect x="3" y="14" width="7" height="7"></rect>
+                                </svg>
+                            </button>
+                            <button id="new-chat-btn" class="icon-btn" title="New Chat">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="chat-list" class="chat-list">
+                        <p class="empty-state">No chat history yet</p>
+                    </div>
+                </div>
+
+                <!-- Document Management Section -->
+                <div class="sidebar-section">
+                    <h2>Document Management</h2>
+
+                    <!-- Upload Section -->
+                    <div class="upload-section">
+                        <label for="file-upload" class="upload-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            Upload Document
+                        </label>
+                        <input type="file" id="file-upload" accept=".pdf,.csv,.docx" hidden>
+                        <p class="upload-hint">Supported: PDF, CSV, DOCX</p>
+                    </div>
+
+                    <!-- Documents List -->
+                    <div class="documents-section">
+                        <h3>Your Documents</h3>
+                        <div id="documents-list" class="documents-list">
+                            <p class="empty-state">No documents uploaded yet</p>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Chat Area -->
+            <main class="chat-container">
+                <div id="chat-messages" class="chat-messages">
+                    <div class="welcome-message">
+                        <h2>Welcome!</h2>
+                        <p>Upload documents and ask questions about them. The AI will use the context from your documents to provide accurate answers.</p>
+                        <div class="example-questions">
+                            <p><strong>Example questions:</strong></p>
+                            <ul>
+                                <li>What are the main topics covered in these documents?</li>
+                                <li>Can you summarize the key findings?</li>
+                                <li>What are the recommendations mentioned?</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="question-form" class="question-form">
+                    <div class="input-container">
+                        <textarea
+                            id="question-input"
+                            placeholder="Ask a question about your documents..."
+                            rows="1"
+                            required
+                        ></textarea>
+                        <button type="submit" class="send-btn" title="Send question">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+            </main>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

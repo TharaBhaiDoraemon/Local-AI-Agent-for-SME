@@ -1,0 +1,22 @@
+{
+  "id": "79ec0e0a-a11e-4ede-b2d6-296278e5baab",
+  "title": "What is difference between UI and UX",
+  "created_at": "2025-10-30T03:20:20.429990",
+  "updated_at": "2025-10-30T03:23:51.712941",
+  "messages": [
+    {
+      "role": "user",
+      "content": "What is difference between UI and UX",
+      "sources": [],
+      "timestamp": "2025-10-30T03:20:20.452968"
+    },
+    {
+      "role": "assistant",
+      "content": "The primary distinction lies in their focus; User Interface (UI) design concentrates on aesthetics, style, responsiveness of visual elements such as screens and buttons. In contrast, Usability (UX), although it also considers looks for an intuitive flow to aid user interaction with technology, primarily emphasizes ease-of-use regardless of the look. Both UI and UX are crucial aspects that work together harmoniously in application design; a visually appealing app may not be functional or satisfactory if its usability is lacking.",
+      "sources": [
+        "UI_UX_M1_Merged_Unit-1,2,3.pdf"
+      ],
+      "timestamp": "2025-10-30T03:23:51.712683"
+    }
+  ]
+}

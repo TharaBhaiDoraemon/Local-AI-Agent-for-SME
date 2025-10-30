@@ -1,9 +1,21 @@
+# Core LangChain packages
 langchain
+langchain-core
 langchain-ollama
 langchain-chroma
-pandas
-pypdf
 langchain-community
-unstructured
+langchain-text-splitters
+
+# Document processing
+pypdf
+pandas
 python-docx
+unstructured
+
+# Web framework and API
+fastapi
+uvicorn[standard]
+python-multipart
+
+# Utilities
 tabulate
