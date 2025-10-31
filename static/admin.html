@@ -387,6 +387,8 @@
             top: 20px;
             right: 20px;
             z-index: 1001;
+            display: flex;
+            gap: 0.5rem;
         }
 
         .theme-btn {
@@ -698,6 +700,11 @@
 <body>
     <!-- Theme Selector -->
     <div class="theme-selector">
+        <button class="dark-mode-btn" onclick="toggleDarkMode()" title="Toggle dark mode">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+        </button>
         <button class="theme-btn" onclick="toggleThemeDropdown()">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="5"></circle>
@@ -1289,6 +1296,16 @@
                     }
                 }
             });
+            
+            // Update dark mode button active state
+            const darkModeBtn = document.querySelector('.dark-mode-btn');
+            if (darkModeBtn) {
+                if (isDarkMode) {
+                    darkModeBtn.classList.add('active');
+                } else {
+                    darkModeBtn.classList.remove('active');
+                }
+            }
         }
 
         // Theme color click handlers
@@ -1308,6 +1325,59 @@
                 document.getElementById('themeDropdown').classList.remove('show');
             });
         });
+
+        // Dark mode toggle function
+        function toggleDarkMode() {
+            const isCurrentlyDark = document.body.classList.contains('dark-mode');
+            const currentShade = getCurrentDarkShade();
+            
+            if (isCurrentlyDark) {
+                // Disable dark mode
+                applyDarkMode(false);
+                localStorage.setItem('adminDarkMode', 'false');
+            } else {
+                // Enable dark mode with current shade (or default to slate if no shade selected yet)
+                applyDarkMode(true, currentShade);
+                localStorage.setItem('adminDarkMode', 'true');
+            }
+            
+            updateActiveStates();
+        }
+        
+        // Update active states function - includes dark mode button state
+        function updateActiveStates() {
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            const currentColor = getCurrentColorTheme();
+            const currentShade = getCurrentDarkShade();
+            
+            // Update theme color active states
+            document.querySelectorAll('.theme-color').forEach(opt => {
+                const theme = opt.getAttribute('data-theme');
+                opt.classList.remove('active');
+
+                // Check if this is a dark shade (slate, zinc, etc.)
+                if (darkShades.includes(theme)) {
+                    if (isDarkMode && theme === currentShade) {
+                        opt.classList.add('active');
+                    }
+                } else {
+                    // Color theme (blue, purple, etc.)
+                    if (theme === currentColor) {
+                        opt.classList.add('active');
+                    }
+                }
+            });
+            
+            // Update dark mode button active state
+            const darkModeBtn = document.querySelector('.dark-mode-btn');
+            if (darkModeBtn) {
+                if (isDarkMode) {
+                    darkModeBtn.classList.add('active');
+                } else {
+                    darkModeBtn.classList.remove('active');
+                }
+            }
+        }
 
         // Load saved theme on page load
         const savedColorTheme = localStorage.getItem('adminColorTheme') || 'blue';
