@@ -1259,6 +1259,26 @@ body {
     color: white;
     font-weight: 500;
     font-size: 0.9rem;
+    flex-wrap: wrap;
+}
+
+.access-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    background: rgba(102, 126, 234, 0.9);
+    color: white;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    margin-left: 0.5rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+#profile-name-display {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .icon-btn-small {
@@ -1299,5 +1319,15 @@ body {
     .status-bar {
         flex-direction: column;
         gap: 0.5rem;
+    }
+
+    .current-profile {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .access-badge {
+        font-size: 0.7rem;
+        padding: 0.15rem 0.5rem;
     }
 }

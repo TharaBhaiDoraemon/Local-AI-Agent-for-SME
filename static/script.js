@@ -215,13 +215,14 @@ async function loginProfile(profileId, pin) {
         // Update UI
         profileNameDisplay.textContent = currentProfile.name;
 
+        // Show welcome message first
+        showNotification(`Welcome, ${currentProfile.name}!`, 'success');
+
         // Load user data
         await updateStatus();
         await loadDocuments();
         await loadGroupsAndChats();
         await displayUserAccessLevel();
-
-        showNotification(`Welcome, ${currentProfile.name}!`, 'success');
     } catch (error) {
         throw error;
     }
@@ -1151,11 +1152,21 @@ function removeLoadingIndicator(loadingId) {
 
 // Show notification
 function showNotification(message, type = 'info') {
+    // Get existing notifications to calculate vertical offset
+    const existingNotifications = document.querySelectorAll('.notification-toast');
+    let topOffset = 20;
+
+    existingNotifications.forEach(notif => {
+        const rect = notif.getBoundingClientRect();
+        topOffset = Math.max(topOffset, rect.bottom - window.scrollY + 10);
+    });
+
     // Create notification element
     const notification = document.createElement('div');
+    notification.className = 'notification-toast';
     notification.style.cssText = `
         position: fixed;
-        top: 20px;
+        top: ${topOffset}px;
         right: 20px;
         padding: 1rem 1.5rem;
         background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
@@ -1164,6 +1175,8 @@ function showNotification(message, type = 'info') {
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         z-index: 1000;
         animation: slideInRight 0.3s ease-out;
+        width: 350px;
+        word-wrap: break-word;
     `;
     notification.textContent = message;
 
@@ -1213,7 +1226,7 @@ async function displayUserAccessLevel() {
 
             // Update profile display with access level
             if (data.has_access) {
-                const accessBadge = `<span style="font-size: 12px; background: #667eea; color: white; padding: 3px 8px; border-radius: 12px; margin-left: 8px;">${data.access_level_name}</span>`;
+                const accessBadge = `<span class="access-badge">${data.access_level_name}</span>`;
                 profileNameDisplay.innerHTML = `${currentProfile.name} ${accessBadge}`;
 
                 // Show notification about access level
