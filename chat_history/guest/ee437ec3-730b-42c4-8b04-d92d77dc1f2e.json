@@ -2,7 +2,7 @@
   "id": "ee437ec3-730b-42c4-8b04-d92d77dc1f2e",
   "title": "What is hypervisor",
   "created_at": "2025-10-30T04:52:04.166297",
-  "updated_at": "2025-10-30T04:52:57.735474",
+  "updated_at": "2025-10-31T03:49:06.136334",
   "messages": [
     {
       "role": "user",
@@ -17,6 +17,32 @@
         "CC_M1_Merged_Unit-1,2.pdf"
       ],
       "timestamp": "2025-10-30T04:52:57.735322"
+    },
+    {
+      "role": "user",
+      "content": "explain software as a service",
+      "sources": [],
+      "timestamp": "2025-10-31T03:47:30.486456"
+    },
+    {
+      "role": "assistant",
+      "content": "I couldn't find any relevant information in the documents to answer your question.",
+      "sources": [],
+      "timestamp": "2025-10-31T03:47:36.606581"
+    },
+    {
+      "role": "user",
+      "content": "explain software as a service",
+      "sources": [],
+      "timestamp": "2025-10-31T03:48:26.191113"
+    },
+    {
+      "role": "assistant",
+      "content": "Software as a Service (SaaS) provides ready-to-use applications delivered over the internet on a subscription basis. In SaaS, customers control only application configuration and user-specific settings while providers manage everything else including infrastructure, platform, and software itself. The purpose of SaaS is to deliver software directly to end users without requiring installation or maintenance from them. Examples include Gmail, Google Workspace, Salesforce, Microsoft Office 365 etc. To ensure a successful SaaS experience for customers, considerations should be given towards proper testing and development that meet user needs while ensuring scalability, resilience to failures (such as dependent service or component failure), security of consumer environment, provisioning infrastructure with redundant components in case individual app fails etc.",
+      "sources": [
+        "CC_M1_Merged_Unit-1,2.pdf"
+      ],
+      "timestamp": "2025-10-31T03:49:06.136235"
     }
   ],
   "group_id": null

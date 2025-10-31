@@ -1,0 +1,65 @@
+[
+  {
+    "id": "5f362e92-e9b8-468c-b153-1d4e806be53a",
+    "filename": "Kaustubh_Gupta_BTech_IT_NMIMS.pdf",
+    "display_name": "Kaustubh_Gupta_BTech_IT_NMIMS.pdf",
+    "file_path": "attachments/Kaustubh_Gupta_BTech_IT_NMIMS.pdf",
+    "access_level": 3,
+    "created_at": "2025-10-31T03:33:27.823788",
+    "updated_at": "2025-10-31T03:33:27.823788"
+  },
+  {
+    "id": "aa72fcda-7a37-4ab8-8297-53aa28782a1a",
+    "filename": "CC_M1_Merged_Unit-1,2.pdf",
+    "display_name": "CC_M1_Merged_Unit-1,2.pdf",
+    "file_path": "attachments/CC_M1_Merged_Unit-1,2.pdf",
+    "access_level": 3,
+    "created_at": "2025-10-31T03:33:27.824055",
+    "updated_at": "2025-10-31T03:33:27.824055"
+  },
+  {
+    "id": "98bd7b80-950d-49d7-a7d3-0d39b3e60ce7",
+    "filename": "UI_UX_M1_Merged_Unit-1,2,3.pdf",
+    "display_name": "UI_UX_M1_Merged_Unit-1,2,3.pdf",
+    "file_path": "attachments/UI_UX_M1_Merged_Unit-1,2,3.pdf",
+    "access_level": 3,
+    "created_at": "2025-10-31T03:33:27.824296",
+    "updated_at": "2025-10-31T03:33:27.824296"
+  },
+  {
+    "id": "4aa5d193-6d80-4307-9edc-ba987e563606",
+    "filename": "A029 Kaustubh Lab-4. B (Module 5)_ Introducing Amazon Elastic File System.pdf",
+    "display_name": "A029 Kaustubh Lab-4. B (Module 5)_ Introducing Amazon Elastic File System.pdf",
+    "file_path": "attachments/A029 Kaustubh Lab-4. B (Module 5)_ Introducing Amazon Elastic File System.pdf",
+    "access_level": 3,
+    "created_at": "2025-10-31T03:33:27.824522",
+    "updated_at": "2025-10-31T03:33:27.824522"
+  },
+  {
+    "id": "bc3ac6bb-b3f5-47ad-a48a-fe1e70fd1cc2",
+    "filename": "GPU_benchmarks_v7.csv",
+    "display_name": "GPU_benchmarks_v7.csv",
+    "file_path": "attachments/GPU_benchmarks_v7.csv",
+    "access_level": 3,
+    "created_at": "2025-10-31T03:33:27.824756",
+    "updated_at": "2025-10-31T03:33:27.824756"
+  },
+  {
+    "id": "515d2822-65e8-4d6b-aa79-c2da124bef7b",
+    "filename": "A055 Experiment No 9 DT.docx",
+    "display_name": "A055 Experiment No 9 DT.docx",
+    "file_path": "attachments/A055 Experiment No 9 DT.docx",
+    "access_level": 3,
+    "created_at": "2025-10-31T03:33:27.825017",
+    "updated_at": "2025-10-31T03:33:27.825017"
+  },
+  {
+    "id": "4a21239b-99a9-4fb5-abff-a0f7e8979c18",
+    "filename": "ISS01.pdf",
+    "display_name": "ISS01.pdf",
+    "file_path": "attachments/ISS01.pdf",
+    "access_level": 3,
+    "created_at": "2025-10-31T03:33:27.825290",
+    "updated_at": "2025-10-31T03:33:27.825290"
+  }
+]

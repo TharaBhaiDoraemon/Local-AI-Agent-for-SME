@@ -66,12 +66,24 @@ You can run the application in two ways:
 
 ## Features
 
+### 🆕 3-Level Access Control System
+- **Level 1**: Single document access (basic users)
+- **Level 2**: Multiple documents access (team members)
+- **Level 3**: Full access to all documents (managers)
+- **IT Admin Portal**: Separate portal for managing user access levels
+- **Document Filtering**: Users only see and query accessible documents
+- **Access Level Badges**: Visual indicators of user permissions
+
+See [QUICK_START.md](QUICK_START.md) for setup guide and [ACCESS_CONTROL_GUIDE.md](ACCESS_CONTROL_GUIDE.md) for detailed documentation.
+
 ### Web Interface
 - Modern, responsive web UI
 - Real-time document upload and management
 - Chat-based Q&A interface
 - Document source tracking
 - Status monitoring
+- Multi-user profile management with PIN protection
+- Access control integration
 
 ### Supported Document Types
 - PDF (.pdf)
@@ -82,8 +94,23 @@ You can run the application in two ways:
 
 The web server exposes the following REST API endpoints:
 
+#### Document Operations
 - `POST /api/ask` - Ask a question about your documents
 - `POST /api/upload` - Upload a new document
-- `GET /api/documents` - List all uploaded documents
+- `GET /api/documents` - List all uploaded documents (filtered by access level)
 - `DELETE /api/documents/{filename}` - Delete a document
 - `GET /api/status` - Get application status
+
+#### Access Control (Admin)
+- `POST /api/admin/login` - Admin authentication
+- `POST /api/admin/users/{user_id}/access-level` - Assign user access level
+- `POST /api/admin/users/{user_id}/assign-documents` - Assign specific documents
+- `GET /api/admin/documents` - List all documents with access levels
+- `PUT /api/admin/documents/{doc_id}/access-level` - Update document access level
+- `GET /api/admin/statistics` - Get system statistics
+
+#### Access Control (User)
+- `GET /api/users/{user_id}/accessible-documents` - Get user's accessible documents
+- `GET /api/users/{user_id}/access-info` - Get user's access level info
+
+For complete API documentation, see [ACCESS_CONTROL_GUIDE.md](ACCESS_CONTROL_GUIDE.md).

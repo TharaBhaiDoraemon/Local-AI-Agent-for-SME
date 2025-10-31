@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Admin Portal - Access Control Management</title>
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --primary-light: #dbeafe;
+            --secondary-color: #64748b;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Theme: Purple */
+        body.theme-purple {
+            --primary-color: #9333ea;
+            --primary-hover: #7e22ce;
+            --primary-light: #f3e8ff;
+        }
+
+        /* Theme: Green */
+        body.theme-green {
+            --primary-color: #10b981;
+            --primary-hover: #059669;
+            --primary-light: #d1fae5;
+        }
+
+        /* Theme: Orange */
+        body.theme-orange {
+            --primary-color: #f97316;
+            --primary-hover: #ea580c;
+            --primary-light: #ffedd5;
+        }
+
+        /* Theme: Pink */
+        body.theme-pink {
+            --primary-color: #ec4899;
+            --primary-hover: #db2777;
+            --primary-light: #fce7f3;
+        }
+
+        /* Theme: Teal */
+        body.theme-teal {
+            --primary-color: #14b8a6;
+            --primary-hover: #0d9488;
+            --primary-light: #ccfbf1;
+        }
+
+        /* Theme: Red */
+        body.theme-red {
+            --primary-color: #ef4444;
+            --primary-hover: #dc2626;
+            --primary-light: #fee2e2;
+        }
+
+        /* Theme: Indigo */
+        body.theme-indigo {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-light: #e0e7ff;
+        }
+
+        /* Theme: Emerald */
+        body.theme-emerald {
+            --primary-color: #059669;
+            --primary-hover: #047857;
+            --primary-light: #d1fae5;
+        }
+
+        /* Theme: Amber */
+        body.theme-amber {
+            --primary-color: #f59e0b;
+            --primary-hover: #d97706;
+            --primary-light: #fef3c7;
+        }
+
+        /* Theme: Cyan */
+        body.theme-cyan {
+            --primary-color: #06b6d4;
+            --primary-hover: #0891b2;
+            --primary-light: #cffafe;
+        }
+
+        /* Dark Mode - Base dark mode class */
+        body.dark-mode {
+            --background: #0f172a;
+            --surface: #1e293b;
+            --border: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+        }
+
+        /* Dark Mode Variations - Only change background shades */
+        body.dark-mode.dark-slate {
+            --background: #0f172a;
+            --surface: #1e293b;
+            --border: #334155;
+        }
+
+        body.dark-mode.dark-zinc {
+            --background: #18181b;
+            --surface: #27272a;
+            --border: #3f3f46;
+        }
+
+        body.dark-mode.dark-stone {
+            --background: #1c1917;
+            --surface: #292524;
+            --border: #44403c;
+        }
+
+        body.dark-mode.dark-gray {
+            --background: #111827;
+            --surface: #1f2937;
+            --border: #374151;
+        }
+
+        body.dark-mode.dark-neutral {
+            --background: #171717;
+            --surface: #262626;
+            --border: #404040;
+        }
+
+        body.dark-mode.dark-charcoal {
+            --background: #0a0a0a;
+            --surface: #1a1a1a;
+            --border: #2a2a2a;
+        }
+
+        body.dark-mode.dark-midnight {
+            --background: #0c1222;
+            --surface: #1a2332;
+            --border: #2d3748;
+        }
+
+        body.dark-mode.dark-onyx {
+            --background: #0d0d0d;
+            --surface: #1c1c1c;
+            --border: #2e2e2e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--background);
+            min-height: 100vh;
+            padding: 20px;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: var(--surface);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+        }
+
+        .logout-btn {
+            float: right;
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: var(--surface);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: var(--shadow-lg);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+        }
+
+        .login-container h2 {
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            font-size: 14px;
+            background: var(--background);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: var(--surface);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+        }
+
+        .tab {
+            padding: 12px 24px;
+            border: none;
+            background: var(--background);
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .tab:hover {
+            background: var(--primary-light);
+            border-color: var(--primary-color);
+        }
+
+        .tab.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+            background: var(--surface);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tab-content h2 {
+            color: var(--text-primary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--primary-color);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-card h3 {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        th {
+            background: var(--background);
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+
+        select {
+            background: var(--background);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .theme-selector {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+        }
+
+        .theme-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            color: var(--text-primary);
+        }
+
+        .theme-btn:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-lg);
+            background: var(--primary-light);
+        }
+
+        .theme-dropdown {
+            position: absolute;
+            top: 55px;
+            right: 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            padding: 12px;
+            display: none;
+            min-width: 220px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .theme-dropdown.show {
+            display: block;
+        }
+
+        .theme-dropdown-header {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .theme-section-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin: 0.5rem 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .theme-section-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 0.75rem 0;
+        }
+
+        .theme-colors {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.5rem;
+        }
+
+        .theme-color {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .theme-color:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .theme-color.active {
+            border-color: var(--text-primary);
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-color.active::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Color theme swatches */
+        .theme-color[data-theme="blue"] { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .theme-color[data-theme="purple"] { background: linear-gradient(135deg, #9333ea, #7e22ce); }
+        .theme-color[data-theme="green"] { background: linear-gradient(135deg, #10b981, #059669); }
+        .theme-color[data-theme="orange"] { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .theme-color[data-theme="pink"] { background: linear-gradient(135deg, #ec4899, #db2777); }
+        .theme-color[data-theme="teal"] { background: linear-gradient(135deg, #14b8a6, #0d9488); }
+        .theme-color[data-theme="red"] { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .theme-color[data-theme="indigo"] { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+        .theme-color[data-theme="emerald"] { background: linear-gradient(135deg, #059669, #047857); }
+        .theme-color[data-theme="amber"] { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .theme-color[data-theme="cyan"] { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+
+        /* Dark mode swatches */
+        .theme-color[data-theme="slate"] { background: linear-gradient(135deg, #0f172a, #1e293b); }
+        .theme-color[data-theme="zinc"] { background: linear-gradient(135deg, #18181b, #27272a); }
+        .theme-color[data-theme="stone"] { background: linear-gradient(135deg, #1c1917, #292524); }
+        .theme-color[data-theme="gray"] { background: linear-gradient(135deg, #111827, #1f2937); }
+        .theme-color[data-theme="neutral"] { background: linear-gradient(135deg, #171717, #262626); }
+        .theme-color[data-theme="charcoal"] { background: linear-gradient(135deg, #0a0a0a, #1a1a1a); }
+        .theme-color[data-theme="midnight"] { background: linear-gradient(135deg, #0c1222, #1a2332); }
+        .theme-color[data-theme="onyx"] { background: linear-gradient(135deg, #0d0d0d, #1c1c1c); }
+
+        .dark-mode-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 6px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: 0.5rem;
+        }
+
+        .dark-mode-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .dark-mode-btn.active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-level-1 {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .badge-level-2 {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .badge-level-3 {
+            background: #28a745;
+            color: white;
+        }
+
+        .badge-admin {
+            background: #dc3545;
+            color: white;
+        }
+
+        .badge-none {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-right: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-sm {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-sm:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+
+        .document-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .document-item {
+            padding: 8px;
+            margin-bottom: 5px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        .document-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Theme Selector -->
+    <div class="theme-selector">
+        <button class="theme-btn" onclick="toggleThemeDropdown()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+        </button>
+        <div id="themeDropdown" class="theme-dropdown">
+            <div class="theme-dropdown-header">Accent Colors</div>
+            <div class="theme-colors">
+                <div class="theme-color active" data-theme="blue" title="Blue"></div>
+                <div class="theme-color" data-theme="purple" title="Purple"></div>
+                <div class="theme-color" data-theme="green" title="Green"></div>
+                <div class="theme-color" data-theme="orange" title="Orange"></div>
+                <div class="theme-color" data-theme="pink" title="Pink"></div>
+                <div class="theme-color" data-theme="teal" title="Teal"></div>
+                <div class="theme-color" data-theme="red" title="Red"></div>
+                <div class="theme-color" data-theme="indigo" title="Indigo"></div>
+                <div class="theme-color" data-theme="emerald" title="Emerald"></div>
+                <div class="theme-color" data-theme="amber" title="Amber"></div>
+                <div class="theme-color" data-theme="cyan" title="Cyan"></div>
+            </div>
+
+            <div class="theme-section-divider"></div>
+            <div class="theme-section-label">Dark Mode Shades</div>
+            <div class="theme-colors">
+                <div class="theme-color" data-theme="slate" title="Slate"></div>
+                <div class="theme-color" data-theme="zinc" title="Zinc"></div>
+                <div class="theme-color" data-theme="stone" title="Stone"></div>
+                <div class="theme-color" data-theme="gray" title="Gray"></div>
+                <div class="theme-color" data-theme="neutral" title="Neutral"></div>
+                <div class="theme-color" data-theme="charcoal" title="Charcoal"></div>
+                <div class="theme-color" data-theme="midnight" title="Midnight"></div>
+                <div class="theme-color" data-theme="onyx" title="Onyx"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <h2>IT Admin Portal</h2>
+        <div id="loginError" class="error-message hidden"></div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" class="btn-primary">Login</button>
+        </form>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminDashboard" class="container hidden">
+        <div class="header">
+            <button class="logout-btn" onclick="logout()">Logout</button>
+            <h1>IT Admin Portal</h1>
+            <p>Manage document access levels and user permissions</p>
+        </div>
+
+        <div id="messageContainer"></div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3 id="statTotalDocs">0</h3>
+                <p>Total Documents</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="statTotalUsers">0</h3>
+                <p>Total Users</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="statLevel1">0</h3>
+                <p>Level 1 Users</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="statLevel2">0</h3>
+                <p>Level 2 Users</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="statLevel3">0</h3>
+                <p>Level 3 Users</p>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('users')">User Management</button>
+            <button class="tab" onclick="switchTab('documents')">Document Management</button>
+        </div>
+
+        <!-- User Management Tab -->
+        <div id="usersTab" class="tab-content active">
+            <h2>User Access Management</h2>
+            <table id="usersTable">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>User ID</th>
+                        <th>Access Level</th>
+                        <th>Documents</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- Document Management Tab -->
+        <div id="documentsTab" class="tab-content">
+            <h2>Document Access Levels</h2>
+            <button class="btn btn-success" onclick="syncDocuments()">Sync Documents</button>
+            <table id="documentsTable">
+                <thead>
+                    <tr>
+                        <th>Filename</th>
+                        <th>Access Level</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Assign Access Level Modal -->
+    <div id="assignLevelModal" class="modal">
+        <div class="modal-content">
+            <h3>Assign Access Level</h3>
+            <div id="modalError" class="error-message hidden"></div>
+            <form id="assignLevelForm">
+                <input type="hidden" id="modalUserId">
+                <div class="form-group">
+                    <label>User</label>
+                    <input type="text" id="modalUserName" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Access Level</label>
+                    <select id="modalAccessLevel" required>
+                        <option value="1">Level 1 - Single Document (Top)</option>
+                        <option value="2">Level 2 - Multiple Documents</option>
+                        <option value="3">Level 3 - All Documents</option>
+                        <option value="99">Administrator</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">Assign Level</button>
+                <button type="button" class="btn btn-danger" onclick="closeModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Assign Documents Modal -->
+    <div id="assignDocsModal" class="modal">
+        <div class="modal-content">
+            <h3>Assign Specific Documents</h3>
+            <div id="docsModalError" class="error-message hidden"></div>
+            <input type="hidden" id="docsModalUserId">
+            <div class="form-group">
+                <label>User</label>
+                <input type="text" id="docsModalUserName" readonly>
+            </div>
+            <div class="form-group">
+                <label>Select Documents</label>
+                <div id="documentsList" class="document-list"></div>
+            </div>
+            <button class="btn-primary" onclick="assignDocuments()">Assign Selected Documents</button>
+            <button class="btn btn-danger" onclick="closeDocsModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Update Document Access Modal -->
+    <div id="updateDocModal" class="modal">
+        <div class="modal-content">
+            <h3>Update Document Access Level</h3>
+            <input type="hidden" id="updateDocId">
+            <div class="form-group">
+                <label>Document</label>
+                <input type="text" id="updateDocName" readonly>
+            </div>
+            <div class="form-group">
+                <label>Access Level Required</label>
+                <select id="updateDocAccessLevel">
+                    <option value="1">Level 1</option>
+                    <option value="2">Level 2</option>
+                    <option value="3">Level 3</option>
+                </select>
+            </div>
+            <button class="btn-primary" onclick="updateDocumentAccess()">Update</button>
+            <button class="btn btn-danger" onclick="closeDocModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        let currentAdmin = null;
+        const API_BASE = '/api';
+
+        // Login functionality
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/login`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password})
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    currentAdmin = data.admin;
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    document.getElementById('adminDashboard').classList.remove('hidden');
+                    loadDashboard();
+                } else {
+                    showError('loginError', data.detail || 'Login failed');
+                }
+            } catch (error) {
+                showError('loginError', 'Connection error: ' + error.message);
+            }
+        });
+
+        function logout() {
+            currentAdmin = null;
+            document.getElementById('adminDashboard').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        async function loadDashboard() {
+            await loadStatistics();
+            await loadUsers();
+            await loadDocuments();
+        }
+
+        async function loadStatistics() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/statistics`);
+                const stats = await response.json();
+
+                document.getElementById('statTotalDocs').textContent = stats.total_documents;
+                document.getElementById('statTotalUsers').textContent = stats.total_users;
+                document.getElementById('statLevel1').textContent = stats.users_by_level.level_1;
+                document.getElementById('statLevel2').textContent = stats.users_by_level.level_2;
+                document.getElementById('statLevel3').textContent = stats.users_by_level.level_3;
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/users`);
+                const data = await response.json();
+                const tbody = document.querySelector('#usersTable tbody');
+                tbody.innerHTML = '';
+
+                data.users.forEach(user => {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td>${user.username}${user.is_guest ? ' <span class="badge badge-none">Guest</span>' : ''}</td>
+                        <td style="font-size: 11px; color: #666;">${user.user_id}</td>
+                        <td>${getAccessLevelBadge(user.access_level)}</td>
+                        <td>${user.accessible_documents_count} documents</td>
+                        <td>
+                            <button class="btn btn-sm" onclick="openAssignLevelModal('${user.user_id}', '${user.username}', ${user.access_level})">
+                                Set Level
+                            </button>
+                            <button class="btn btn-sm" onclick="openAssignDocsModal('${user.user_id}', '${user.username}')">
+                                Assign Docs
+                            </button>
+                        </td>
+                    `;
+                });
+            } catch (error) {
+                console.error('Error loading users:', error);
+            }
+        }
+
+        async function loadDocuments() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/documents`);
+                const data = await response.json();
+                const tbody = document.querySelector('#documentsTable tbody');
+                tbody.innerHTML = '';
+
+                data.documents.forEach(doc => {
+                    const row = tbody.insertRow();
+                    const date = new Date(doc.created_at).toLocaleDateString();
+                    row.innerHTML = `
+                        <td>${doc.filename}</td>
+                        <td>${getAccessLevelBadge(doc.access_level)}</td>
+                        <td>${date}</td>
+                        <td>
+                            <button class="btn btn-sm" onclick="openDocModal('${doc.id}', '${doc.filename}', ${doc.access_level})">
+                                Change Level
+                            </button>
+                        </td>
+                    `;
+                });
+            } catch (error) {
+                console.error('Error loading documents:', error);
+            }
+        }
+
+        function getAccessLevelBadge(level) {
+            if (level === null) return '<span class="badge badge-none">No Access</span>';
+            if (level === 1) return '<span class="badge badge-level-1">Level 1</span>';
+            if (level === 2) return '<span class="badge badge-level-2">Level 2</span>';
+            if (level === 3) return '<span class="badge badge-level-3">Level 3</span>';
+            if (level === 99) return '<span class="badge badge-admin">Admin</span>';
+            return '<span class="badge badge-none">Unknown</span>';
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(`${tab}Tab`).classList.add('active');
+        }
+
+        function openAssignLevelModal(userId, userName, currentLevel) {
+            document.getElementById('modalUserId').value = userId;
+            document.getElementById('modalUserName').value = userName;
+            document.getElementById('modalAccessLevel').value = currentLevel || 1;
+            document.getElementById('assignLevelModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('assignLevelModal').classList.remove('active');
+        }
+
+        document.getElementById('assignLevelForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userId = document.getElementById('modalUserId').value;
+            const accessLevel = parseInt(document.getElementById('modalAccessLevel').value);
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/users/${userId}/access-level`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({user_id: userId, access_level: accessLevel})
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('Access level assigned successfully!', 'success');
+                    closeModal();
+                    loadDashboard();
+                } else {
+                    showError('modalError', data.detail || 'Failed to assign access level');
+                }
+            } catch (error) {
+                showError('modalError', 'Connection error: ' + error.message);
+            }
+        });
+
+        async function openAssignDocsModal(userId, userName) {
+            document.getElementById('docsModalUserId').value = userId;
+            document.getElementById('docsModalUserName').value = userName;
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/documents`);
+                const data = await response.json();
+                const container = document.getElementById('documentsList');
+                container.innerHTML = '';
+
+                data.documents.forEach(doc => {
+                    const item = document.createElement('div');
+                    item.className = 'document-item';
+                    item.innerHTML = `
+                        <input type="checkbox" id="doc_${doc.id}" value="${doc.id}">
+                        <label for="doc_${doc.id}">${doc.filename}</label>
+                    `;
+                    container.appendChild(item);
+                });
+
+                document.getElementById('assignDocsModal').classList.add('active');
+            } catch (error) {
+                console.error('Error loading documents:', error);
+            }
+        }
+
+        function closeDocsModal() {
+            document.getElementById('assignDocsModal').classList.remove('active');
+        }
+
+        async function assignDocuments() {
+            const userId = document.getElementById('docsModalUserId').value;
+            const checkboxes = document.querySelectorAll('#documentsList input[type="checkbox"]:checked');
+            const documentIds = Array.from(checkboxes).map(cb => cb.value);
+
+            if (documentIds.length === 0) {
+                showError('docsModalError', 'Please select at least one document');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/users/${userId}/assign-documents`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({user_id: userId, document_ids: documentIds})
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('Documents assigned successfully!', 'success');
+                    closeDocsModal();
+                    loadUsers();
+                } else {
+                    showError('docsModalError', data.detail || 'Failed to assign documents');
+                }
+            } catch (error) {
+                showError('docsModalError', 'Connection error: ' + error.message);
+            }
+        }
+
+        function openDocModal(docId, filename, currentLevel) {
+            document.getElementById('updateDocId').value = docId;
+            document.getElementById('updateDocName').value = filename;
+            document.getElementById('updateDocAccessLevel').value = currentLevel;
+            document.getElementById('updateDocModal').classList.add('active');
+        }
+
+        function closeDocModal() {
+            document.getElementById('updateDocModal').classList.remove('active');
+        }
+
+        async function updateDocumentAccess() {
+            const docId = document.getElementById('updateDocId').value;
+            const accessLevel = parseInt(document.getElementById('updateDocAccessLevel').value);
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/documents/${docId}/access-level`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({document_id: docId, access_level: accessLevel})
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('Document access level updated!', 'success');
+                    closeDocModal();
+                    loadDocuments();
+                } else {
+                    alert(data.detail || 'Failed to update document');
+                }
+            } catch (error) {
+                alert('Connection error: ' + error.message);
+            }
+        }
+
+        async function syncDocuments() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/documents/sync`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage(data.message, 'success');
+                    loadDashboard();
+                } else {
+                    alert(data.detail || 'Failed to sync documents');
+                }
+            } catch (error) {
+                alert('Connection error: ' + error.message);
+            }
+        }
+
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.classList.remove('hidden');
+            setTimeout(() => element.classList.add('hidden'), 5000);
+        }
+
+        function showMessage(message, type) {
+            const container = document.getElementById('messageContainer');
+            const div = document.createElement('div');
+            div.className = type === 'success' ? 'success-message' : 'error-message';
+            div.textContent = message;
+            container.appendChild(div);
+            setTimeout(() => div.remove(), 5000);
+        }
+
+        // Theme Management
+        const colorThemes = ['blue', 'purple', 'green', 'orange', 'pink', 'teal', 'red', 'indigo', 'emerald', 'amber', 'cyan'];
+        const darkShades = ['slate', 'zinc', 'stone', 'gray', 'neutral', 'charcoal', 'midnight', 'onyx'];
+
+        function toggleThemeDropdown() {
+            const dropdown = document.getElementById('themeDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        function applyColorTheme(theme) {
+            // Remove all color theme classes
+            colorThemes.forEach(t => {
+                if (t !== 'blue') {
+                    document.body.classList.remove(`theme-${t}`);
+                }
+            });
+
+            // Add new color theme (blue is default, no class needed)
+            if (theme !== 'blue') {
+                document.body.classList.add(`theme-${theme}`);
+            }
+
+            localStorage.setItem('adminColorTheme', theme);
+        }
+
+        function applyDarkMode(enabled, shade = 'slate') {
+            // Remove all dark shade classes
+            darkShades.forEach(s => {
+                document.body.classList.remove(`dark-${s}`);
+            });
+
+            if (enabled) {
+                document.body.classList.add('dark-mode');
+                document.body.classList.add(`dark-${shade}`);
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+
+            localStorage.setItem('adminDarkMode', enabled);
+            if (enabled) {
+                localStorage.setItem('adminDarkShade', shade);
+            }
+        }
+
+        function getCurrentDarkShade() {
+            for (const shade of darkShades) {
+                if (document.body.classList.contains(`dark-${shade}`)) {
+                    return shade;
+                }
+            }
+            return 'slate';
+        }
+
+        function getCurrentColorTheme() {
+            for (const theme of colorThemes) {
+                if (theme === 'blue') {
+                    const hasOtherTheme = colorThemes.some(t => t !== 'blue' && document.body.classList.contains(`theme-${t}`));
+                    if (!hasOtherTheme) return 'blue';
+                } else if (document.body.classList.contains(`theme-${theme}`)) {
+                    return theme;
+                }
+            }
+            return 'blue';
+        }
+
+        function updateActiveStates() {
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            const currentColor = getCurrentColorTheme();
+            const currentShade = getCurrentDarkShade();
+
+            document.querySelectorAll('.theme-color').forEach(opt => {
+                const theme = opt.getAttribute('data-theme');
+                opt.classList.remove('active');
+
+                // Check if this is a dark shade (slate, zinc, etc.)
+                if (darkShades.includes(theme)) {
+                    if (isDarkMode && theme === currentShade) {
+                        opt.classList.add('active');
+                    }
+                } else {
+                    // Color theme (blue, purple, etc.)
+                    if (theme === currentColor) {
+                        opt.classList.add('active');
+                    }
+                }
+            });
+        }
+
+        // Theme color click handlers
+        document.querySelectorAll('.theme-color').forEach(option => {
+            option.addEventListener('click', function() {
+                const theme = this.getAttribute('data-theme');
+
+                if (darkShades.includes(theme)) {
+                    // It's a dark shade - apply dark mode with this shade
+                    applyDarkMode(true, theme);
+                } else {
+                    // It's a color theme - apply it
+                    applyColorTheme(theme);
+                }
+
+                updateActiveStates();
+                document.getElementById('themeDropdown').classList.remove('show');
+            });
+        });
+
+        // Load saved theme on page load
+        const savedColorTheme = localStorage.getItem('adminColorTheme') || 'blue';
+        const savedDarkMode = localStorage.getItem('adminDarkMode') === 'true';
+        const savedDarkShade = localStorage.getItem('adminDarkShade') || 'slate';
+
+        applyColorTheme(savedColorTheme);
+        if (savedDarkMode) {
+            applyDarkMode(true, savedDarkShade);
+        }
+        updateActiveStates();
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const themeSelector = document.querySelector('.theme-selector');
+            const dropdown = document.getElementById('themeDropdown');
+            if (!themeSelector.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>

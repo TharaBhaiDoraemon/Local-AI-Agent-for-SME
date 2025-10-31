@@ -2,7 +2,7 @@
   "id": "cac84190-85cc-43a5-9ca4-17a082b25ebb",
   "title": "diffrence between UI and UX",
   "created_at": "2025-10-30T15:33:38.490125",
-  "updated_at": "2025-10-30T15:34:28.313709",
+  "updated_at": "2025-10-31T11:07:53.997120",
   "messages": [
     {
       "role": "user",
@@ -17,6 +17,37 @@
         "UI_UX_M1_Merged_Unit-1,2,3.pdf"
       ],
       "timestamp": "2025-10-30T15:34:28.313664"
+    },
+    {
+      "role": "user",
+      "content": "What is quantum computing?",
+      "sources": [],
+      "timestamp": "2025-10-31T11:06:20.099213"
+    },
+    {
+      "role": "assistant",
+      "content": "Quantum computing is a type of computation that leverages the principles of quantum mechanics to process information in ways that traditional computers cannot efficiently replicate, typically using qubits. Unlike classical bits which can be either 0 or 1, qubits can exist in multiple states simultaneously due to superposition, potentially enabling vastly faster processing for certain types of complex problems. Quantum computing is still an emerging technology and remains largely experimental at this stage.",
+      "sources": [
+        "CC_M1_Merged_Unit-1,2.pdf",
+        "ISS01.pdf"
+      ],
+      "timestamp": "2025-10-31T11:06:54.787696"
+    },
+    {
+      "role": "user",
+      "content": "India vs Australia criket score",
+      "sources": [],
+      "timestamp": "2025-10-31T11:07:34.003875"
+    },
+    {
+      "role": "assistant",
+      "content": "I'm sorry, but I don't have information on cricket scores between India and Australia in this context. If you could provide more specific details or check a reliable sports news source for recent matches, that might give you the required data.",
+      "sources": [
+        "ISS01.pdf",
+        "A029 Kaustubh Lab-4. B (Module 5)_ Introducing Amazon Elastic File System.pdf",
+        "GPU_benchmarks_v7.csv"
+      ],
+      "timestamp": "2025-10-31T11:07:53.997074"
     }
   ],
   "group_id": null

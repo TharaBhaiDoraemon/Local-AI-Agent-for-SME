@@ -17,6 +17,18 @@ from vector import retriever, get_vector_store, process_documents
 from langchain_ollama.llms import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
 
+# Import access control system
+from access_control import (
+    access_control,
+    ACCESS_LEVEL_1,
+    ACCESS_LEVEL_2,
+    ACCESS_LEVEL_3,
+    ACCESS_LEVEL_ADMIN,
+    DocumentAccess,
+    UserAccessProfile,
+    ITAdmin
+)
+
 app = FastAPI(title="Local AI Agent for SME")
 
 # Enable CORS for frontend
@@ -99,6 +111,7 @@ class Profile(BaseModel):
     is_guest: bool = False
     created_at: str
     has_pin: bool = False  # Indicates if profile is PIN-protected (safe to send to frontend)
+    profile_picture: Optional[str] = None  # Path to profile picture
 
 class CreateProfileRequest(BaseModel):
     name: str
@@ -109,14 +122,42 @@ class LoginProfileRequest(BaseModel):
     profile_id: str
     pin: Optional[str] = None
 
+# Access Control Models
+class AssignAccessLevelRequest(BaseModel):
+    user_id: str
+    access_level: int
+
+class AssignDocumentsRequest(BaseModel):
+    user_id: str
+    document_ids: List[str]
+
+class ITAdminLoginRequest(BaseModel):
+    username: str
+    password: str
+
+class CreateITAdminRequest(BaseModel):
+    username: str
+    password: str
+
+class UpdateDocumentAccessRequest(BaseModel):
+    document_id: str
+    access_level: int
+
+class UpdateProfileRequest(BaseModel):
+    name: Optional[str] = None
+    pin: Optional[str] = None
+    hint: Optional[str] = None
+
 # Ensure directories exist
 ATTACHMENTS_DIR = Path("./attachments")
 STATIC_DIR = Path("./static")
 CHAT_HISTORY_DIR = Path("./chat_history")
 PROFILES_FILE = Path("./profiles.json")
+PROFILE_PICTURES_DIR = Path("./profile_pictures")
 ATTACHMENTS_DIR.mkdir(exist_ok=True)
 STATIC_DIR.mkdir(exist_ok=True)
 CHAT_HISTORY_DIR.mkdir(exist_ok=True)
+PROFILE_PICTURES_DIR.mkdir(exist_ok=True)
 
 # Profile Management Functions
 def load_profiles() -> List[Profile]:
@@ -206,6 +247,9 @@ def validate_profile_pin(profile_id: str, pin: Optional[str]) -> bool:
 
 # Initialize profiles (create guest if needed)
 load_profiles()
+
+# Initialize access control - sync documents from attachments directory
+access_control.sync_documents_from_directory(ATTACHMENTS_DIR)
 
 # Chat History Management Functions
 def get_profile_chat_dir(profile_id: str) -> Path:
@@ -443,6 +487,11 @@ async def root():
     """Serve the frontend HTML"""
     return FileResponse("static/index.html")
 
+@app.get("/admin")
+async def admin_portal():
+    """Serve the IT admin portal"""
+    return FileResponse("static/admin.html")
+
 @app.post("/api/ask", response_model=QuestionResponse)
 async def ask_question(request: QuestionRequest):
     """
@@ -461,6 +510,20 @@ async def ask_question(request: QuestionRequest):
 
         # Retrieve relevant documents
         docs = retriever.invoke(request.question)
+
+        # Filter documents based on user access level
+        user_access_profile = access_control.get_user_access_profile(request.profile_id)
+        if user_access_profile:
+            accessible_docs = access_control.get_user_accessible_documents(request.profile_id)
+            accessible_filenames = {doc.filename for doc in accessible_docs}
+
+            # Filter retrieved docs to only include accessible ones
+            docs = [
+                doc for doc in docs
+                if hasattr(doc, 'metadata') and
+                'source' in doc.metadata and
+                os.path.basename(doc.metadata['source']) in accessible_filenames
+            ]
 
         if not docs:
             answer = "I couldn't find any relevant information in the documents to answer your question."
@@ -534,19 +597,35 @@ async def upload_document(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Error uploading file: {str(e)}")
 
 @app.get("/api/documents")
-async def list_documents():
+async def list_documents(profile_id: Optional[str] = None):
     """
-    List all documents in the attachments directory
+    List all documents accessible by the user (respects access control)
     """
     try:
-        documents = []
-        for file_path in ATTACHMENTS_DIR.iterdir():
-            if file_path.is_file() and file_path.suffix.lower() in ['.pdf', '.csv', '.docx']:
-                documents.append({
-                    "name": file_path.name,
-                    "size": file_path.stat().st_size,
-                    "type": file_path.suffix.lower()
-                })
+        # If profile_id provided, filter by access level
+        if profile_id:
+            accessible_docs = access_control.get_user_accessible_documents(profile_id)
+            documents = []
+            for doc in accessible_docs:
+                file_path = Path(doc.file_path)
+                if file_path.exists():
+                    documents.append({
+                        "id": doc.id,
+                        "name": doc.filename,
+                        "size": file_path.stat().st_size,
+                        "type": file_path.suffix.lower(),
+                        "access_level": doc.access_level
+                    })
+        else:
+            # No profile_id - show all documents (for admin)
+            documents = []
+            for file_path in ATTACHMENTS_DIR.iterdir():
+                if file_path.is_file() and file_path.suffix.lower() in ['.pdf', '.csv', '.docx']:
+                    documents.append({
+                        "name": file_path.name,
+                        "size": file_path.stat().st_size,
+                        "type": file_path.suffix.lower()
+                    })
 
         return {"documents": documents}
 
@@ -879,8 +958,489 @@ async def delete_existing_profile(profile_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting profile: {str(e)}")
 
-# Mount static files
+@app.put("/api/profiles/{profile_id}")
+async def update_profile(profile_id: str, request: UpdateProfileRequest):
+    """
+    Update profile information (name, pin, hint)
+    """
+    try:
+        profiles = load_profiles()
+        profile = None
+
+        for p in profiles:
+            if p.id == profile_id:
+                profile = p
+                break
+
+        if not profile:
+            raise HTTPException(status_code=404, detail="Profile not found")
+
+        if profile.is_guest:
+            raise HTTPException(status_code=400, detail="Cannot update guest profile")
+
+        # Update fields if provided
+        if request.name is not None:
+            profile.name = request.name
+        if request.pin is not None:
+            profile.pin = request.pin
+        if request.hint is not None:
+            profile.hint = request.hint
+
+        # Save updated profiles
+        save_profiles(profiles)
+
+        # Return profile without PIN for security
+        profile.has_pin = profile.pin is not None and profile.pin != ""
+        profile.pin = None
+
+        return {
+            "status": "success",
+            "message": "Profile updated successfully",
+            "profile": profile
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating profile: {str(e)}")
+
+@app.post("/api/profiles/{profile_id}/picture")
+async def upload_profile_picture(profile_id: str, file: UploadFile = File(...)):
+    """
+    Upload a profile picture for a user
+    """
+    try:
+        # Validate file type
+        allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif']
+        file_ext = os.path.splitext(file.filename)[1].lower()
+
+        if file_ext not in allowed_extensions:
+            raise HTTPException(
+                status_code=400,
+                detail=f"File type not supported. Allowed types: {', '.join(allowed_extensions)}"
+            )
+
+        # Load profiles
+        profiles = load_profiles()
+        profile = None
+
+        for p in profiles:
+            if p.id == profile_id:
+                profile = p
+                break
+
+        if not profile:
+            raise HTTPException(status_code=404, detail="Profile not found")
+
+        # Delete old profile picture if exists
+        if profile.profile_picture:
+            old_pic_path = Path(profile.profile_picture)
+            if old_pic_path.exists():
+                old_pic_path.unlink()
+
+        # Save new profile picture
+        filename = f"{profile_id}{file_ext}"
+        file_path = PROFILE_PICTURES_DIR / filename
+
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        # Update profile with picture path
+        profile.profile_picture = str(file_path)
+        save_profiles(profiles)
+
+        return {
+            "status": "success",
+            "message": "Profile picture uploaded successfully",
+            "picture_url": f"/profile_pictures/{filename}"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error uploading profile picture: {str(e)}")
+
+@app.get("/api/profiles/{profile_id}/picture")
+async def get_profile_picture(profile_id: str):
+    """
+    Get profile picture for a user
+    """
+    try:
+        profiles = load_profiles()
+        profile = None
+
+        for p in profiles:
+            if p.id == profile_id:
+                profile = p
+                break
+
+        if not profile:
+            raise HTTPException(status_code=404, detail="Profile not found")
+
+        if not profile.profile_picture or not Path(profile.profile_picture).exists():
+            # Return default avatar
+            raise HTTPException(status_code=404, detail="No profile picture found")
+
+        return FileResponse(profile.profile_picture)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting profile picture: {str(e)}")
+
+@app.delete("/api/profiles/{profile_id}/picture")
+async def delete_profile_picture(profile_id: str):
+    """
+    Delete profile picture for a user
+    """
+    try:
+        profiles = load_profiles()
+        profile = None
+
+        for p in profiles:
+            if p.id == profile_id:
+                profile = p
+                break
+
+        if not profile:
+            raise HTTPException(status_code=404, detail="Profile not found")
+
+        if profile.profile_picture:
+            pic_path = Path(profile.profile_picture)
+            if pic_path.exists():
+                pic_path.unlink()
+
+            profile.profile_picture = None
+            save_profiles(profiles)
+
+        return {
+            "status": "success",
+            "message": "Profile picture deleted successfully"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting profile picture: {str(e)}")
+
+# ============================================================================
+# ACCESS CONTROL ENDPOINTS
+# ============================================================================
+
+# IT Admin Authentication Endpoints
+@app.post("/api/admin/login")
+async def admin_login(request: ITAdminLoginRequest):
+    """
+    Authenticate IT administrator
+    """
+    try:
+        admin = access_control.authenticate_admin(request.username, request.password)
+        if not admin:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+
+        return {
+            "status": "success",
+            "message": "Admin login successful",
+            "admin": {
+                "id": admin.id,
+                "username": admin.username
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during admin login: {str(e)}")
+
+@app.post("/api/admin/create")
+async def create_admin(request: CreateITAdminRequest):
+    """
+    Create a new IT admin account (requires existing admin authentication in production)
+    """
+    try:
+        admin = access_control.create_it_admin(request.username, request.password)
+        return {
+            "status": "success",
+            "message": "Admin created successfully",
+            "admin": {
+                "id": admin.id,
+                "username": admin.username
+            }
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating admin: {str(e)}")
+
+@app.get("/api/admin/list")
+async def list_admins():
+    """
+    List all IT admin accounts
+    """
+    try:
+        admins = access_control.get_all_admins()
+        return {
+            "admins": [
+                {"id": admin.id, "username": admin.username, "created_at": admin.created_at}
+                for admin in admins
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error listing admins: {str(e)}")
+
+# Document Access Management Endpoints
+@app.get("/api/admin/documents")
+async def get_all_managed_documents():
+    """
+    Get all documents with their access levels (for admin dashboard)
+    """
+    try:
+        documents = access_control.get_all_documents()
+        return {
+            "documents": [
+                {
+                    "id": doc.id,
+                    "filename": doc.filename,
+                    "file_path": doc.file_path,
+                    "access_level": doc.access_level,
+                    "created_at": doc.created_at,
+                    "updated_at": doc.updated_at
+                }
+                for doc in documents
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting documents: {str(e)}")
+
+@app.put("/api/admin/documents/{doc_id}/access-level")
+async def update_document_access(doc_id: str, request: UpdateDocumentAccessRequest):
+    """
+    Update the access level required for a document
+    """
+    try:
+        doc = access_control.update_document_access_level(doc_id, request.access_level)
+        if not doc:
+            raise HTTPException(status_code=404, detail="Document not found")
+
+        return {
+            "status": "success",
+            "message": "Document access level updated",
+            "document": {
+                "id": doc.id,
+                "filename": doc.filename,
+                "access_level": doc.access_level
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating document: {str(e)}")
+
+@app.post("/api/admin/documents/sync")
+async def sync_documents():
+    """
+    Sync documents from attachments directory with access control system
+    """
+    try:
+        access_control.sync_documents_from_directory(ATTACHMENTS_DIR)
+        documents = access_control.get_all_documents()
+        return {
+            "status": "success",
+            "message": f"Synced {len(documents)} documents",
+            "total_documents": len(documents)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error syncing documents: {str(e)}")
+
+# User Access Management Endpoints
+@app.post("/api/admin/users/{user_id}/access-level")
+async def assign_user_access_level(user_id: str, request: AssignAccessLevelRequest):
+    """
+    Assign or update a user's access level
+    """
+    try:
+        # Check if user exists in profiles
+        profiles = load_profiles()
+        user_exists = any(p.id == user_id for p in profiles)
+        if not user_exists:
+            raise HTTPException(status_code=404, detail="User profile not found")
+
+        # Check if user already has an access profile
+        existing_profile = access_control.get_user_access_profile(user_id)
+
+        if existing_profile:
+            # Update existing access level
+            user_profile = access_control.update_user_access_level(user_id, request.access_level)
+        else:
+            # Create new access profile
+            user_profile = access_control.create_user_access_profile(user_id, request.access_level)
+
+        return {
+            "status": "success",
+            "message": "User access level assigned",
+            "user_profile": {
+                "user_id": user_profile.user_id,
+                "access_level": user_profile.access_level,
+                "allowed_documents_count": len(user_profile.allowed_documents)
+            }
+        }
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error assigning access level: {str(e)}")
+
+@app.post("/api/admin/users/{user_id}/assign-documents")
+async def assign_user_documents(user_id: str, request: AssignDocumentsRequest):
+    """
+    Manually assign specific documents to a user (for Level 2 custom access)
+    """
+    try:
+        user_profile = access_control.assign_documents_to_user(user_id, request.document_ids)
+        if not user_profile:
+            raise HTTPException(status_code=404, detail="User access profile not found")
+
+        return {
+            "status": "success",
+            "message": "Documents assigned to user",
+            "user_profile": {
+                "user_id": user_profile.user_id,
+                "access_level": user_profile.access_level,
+                "allowed_documents": user_profile.allowed_documents
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error assigning documents: {str(e)}")
+
+@app.get("/api/admin/users")
+async def get_all_user_access_profiles():
+    """
+    Get all users with their access profiles (for admin dashboard)
+    """
+    try:
+        profiles = load_profiles()
+        user_access_data = []
+
+        for profile in profiles:
+            access_profile = access_control.get_user_access_profile(profile.id)
+            accessible_docs = access_control.get_user_accessible_documents(profile.id) if access_profile else []
+
+            user_access_data.append({
+                "user_id": profile.id,
+                "username": profile.name,
+                "is_guest": profile.is_guest,
+                "access_level": access_profile.access_level if access_profile else None,
+                "accessible_documents_count": len(accessible_docs),
+                "accessible_documents": [
+                    {"id": doc.id, "filename": doc.filename}
+                    for doc in accessible_docs
+                ]
+            })
+
+        return {"users": user_access_data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting user access profiles: {str(e)}")
+
+@app.get("/api/admin/users/{user_id}/access")
+async def get_user_access_details(user_id: str):
+    """
+    Get detailed access information for a specific user
+    """
+    try:
+        access_profile = access_control.get_user_access_profile(user_id)
+        if not access_profile:
+            return {
+                "user_id": user_id,
+                "has_access_profile": False,
+                "access_level": None,
+                "accessible_documents": []
+            }
+
+        accessible_docs = access_control.get_user_accessible_documents(user_id)
+
+        return {
+            "user_id": user_id,
+            "has_access_profile": True,
+            "access_level": access_profile.access_level,
+            "allowed_documents": access_profile.allowed_documents,
+            "accessible_documents": [
+                {
+                    "id": doc.id,
+                    "filename": doc.filename,
+                    "access_level": doc.access_level
+                }
+                for doc in accessible_docs
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting user access details: {str(e)}")
+
+@app.get("/api/admin/statistics")
+async def get_access_statistics():
+    """
+    Get statistics about the access control system
+    """
+    try:
+        stats = access_control.get_access_statistics()
+        return stats
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting statistics: {str(e)}")
+
+# User-facing access endpoints
+@app.get("/api/users/{user_id}/accessible-documents")
+async def get_user_accessible_docs(user_id: str):
+    """
+    Get documents accessible to a specific user (for frontend display)
+    """
+    try:
+        accessible_docs = access_control.get_user_accessible_documents(user_id)
+        return {
+            "documents": [
+                {
+                    "id": doc.id,
+                    "filename": doc.filename,
+                    "access_level_required": doc.access_level
+                }
+                for doc in accessible_docs
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting accessible documents: {str(e)}")
+
+@app.get("/api/users/{user_id}/access-info")
+async def get_user_access_info(user_id: str):
+    """
+    Get access level information for a user
+    """
+    try:
+        access_profile = access_control.get_user_access_profile(user_id)
+
+        if not access_profile:
+            return {
+                "user_id": user_id,
+                "has_access": False,
+                "access_level": None,
+                "access_level_name": "No Access"
+            }
+
+        level_names = {
+            ACCESS_LEVEL_1: "Level 1 - Single Document",
+            ACCESS_LEVEL_2: "Level 2 - Multiple Documents",
+            ACCESS_LEVEL_3: "Level 3 - All Documents",
+            ACCESS_LEVEL_ADMIN: "Administrator"
+        }
+
+        return {
+            "user_id": user_id,
+            "has_access": True,
+            "access_level": access_profile.access_level,
+            "access_level_name": level_names.get(access_profile.access_level, "Unknown"),
+            "document_count": len(access_profile.allowed_documents)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting access info: {str(e)}")
+
+# Mount static files and profile pictures
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/profile_pictures", StaticFiles(directory="profile_pictures"), name="profile_pictures")
 
 if __name__ == "__main__":
     print("Starting Local AI Agent API server...")

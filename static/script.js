@@ -17,11 +17,14 @@ const chatList = document.getElementById('chat-list');
 const profileModal = document.getElementById('profile-modal');
 const createProfileModal = document.getElementById('create-profile-modal');
 const pinModal = document.getElementById('pin-modal');
+const profileSettingsModal = document.getElementById('profile-settings-modal');
 const profileList = document.getElementById('profile-list');
 const createProfileBtn = document.getElementById('create-profile-btn');
 const createProfileForm = document.getElementById('create-profile-form');
 const pinForm = document.getElementById('pin-form');
+const profileSettingsForm = document.getElementById('profile-settings-form');
 const switchProfileBtn = document.getElementById('switch-profile-btn');
+const profileSettingsBtn = document.getElementById('profile-settings-btn');
 const profileNameDisplay = document.getElementById('profile-name-display');
 
 // Current state
@@ -216,6 +219,7 @@ async function loginProfile(profileId, pin) {
         await updateStatus();
         await loadDocuments();
         await loadGroupsAndChats();
+        await displayUserAccessLevel();
 
         showNotification(`Welcome, ${currentProfile.name}!`, 'success');
     } catch (error) {
@@ -445,7 +449,10 @@ async function updateStatus() {
 // Load and display documents
 async function loadDocuments() {
     try {
-        const response = await fetch(`${API_BASE}/api/documents`);
+        // Pass profile_id to filter documents based on access level
+        const profileId = currentProfile ? currentProfile.id : '';
+        const url = profileId ? `${API_BASE}/api/documents?profile_id=${profileId}` : `${API_BASE}/api/documents`;
+        const response = await fetch(url);
         const data = await response.json();
 
         if (data.documents && data.documents.length > 0) {
@@ -1194,6 +1201,171 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Display user access level
+async function displayUserAccessLevel() {
+    if (!currentProfile) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/api/users/${currentProfile.id}/access-info`);
+        if (response.ok) {
+            const data = await response.json();
+
+            // Update profile display with access level
+            if (data.has_access) {
+                const accessBadge = `<span style="font-size: 12px; background: #667eea; color: white; padding: 3px 8px; border-radius: 12px; margin-left: 8px;">${data.access_level_name}</span>`;
+                profileNameDisplay.innerHTML = `${currentProfile.name} ${accessBadge}`;
+
+                // Show notification about access level
+                const docText = data.document_count === 1 ? 'document' : 'documents';
+                showNotification(`Access Level: ${data.access_level_name} (${data.document_count} ${docText})`, 'info');
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching access level:', error);
+    }
+}
+
+// Profile Settings Functions
+profileSettingsBtn?.addEventListener('click', () => {
+    if (!currentProfile || currentProfile.is_guest) {
+        showNotification('Guest profile cannot be edited', 'error');
+        return;
+    }
+    openProfileSettings();
+});
+
+async function openProfileSettings() {
+    // Load current profile data
+    document.getElementById('settings-name').value = currentProfile.name;
+    document.getElementById('settings-hint').value = currentProfile.hint || '';
+    document.getElementById('settings-pin').value = '';
+
+    // Load profile picture if exists
+    try {
+        const response = await fetch(`${API_BASE}/api/profiles/${currentProfile.id}/picture`);
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            document.getElementById('profile-pic-preview').innerHTML = `<img src="${url}" style="width: 100%; height: 100%; object-fit: cover;">`;
+            document.getElementById('remove-pic-btn').style.display = 'block';
+        } else {
+            // Show default avatar
+            document.getElementById('profile-pic-preview').innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>`;
+            document.getElementById('remove-pic-btn').style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error loading profile picture:', error);
+    }
+
+    profileSettingsModal.classList.add('show');
+}
+
+document.getElementById('upload-pic-btn')?.addEventListener('click', () => {
+    document.getElementById('profile-pic-input').click();
+});
+
+document.getElementById('profile-pic-input')?.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch(`${API_BASE}/api/profiles/${currentProfile.id}/picture`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            // Display uploaded image
+            const url = URL.createObjectURL(file);
+            document.getElementById('profile-pic-preview').innerHTML = `<img src="${url}" style="width: 100%; height: 100%; object-fit: cover;">`;
+            document.getElementById('remove-pic-btn').style.display = 'block';
+            showNotification('Profile picture uploaded successfully', 'success');
+        } else {
+            const error = await response.json();
+            showNotification(error.detail || 'Failed to upload picture', 'error');
+        }
+    } catch (error) {
+        showNotification('Error uploading picture: ' + error.message, 'error');
+    }
+});
+
+document.getElementById('remove-pic-btn')?.addEventListener('click', async () => {
+    if (!confirm('Remove profile picture?')) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/api/profiles/${currentProfile.id}/picture`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            document.getElementById('profile-pic-preview').innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>`;
+            document.getElementById('remove-pic-btn').style.display = 'none';
+            showNotification('Profile picture removed', 'success');
+        }
+    } catch (error) {
+        showNotification('Error removing picture: ' + error.message, 'error');
+    }
+});
+
+document.getElementById('cancel-settings-btn')?.addEventListener('click', () => {
+    profileSettingsModal.classList.remove('show');
+});
+
+profileSettingsForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById('settings-name').value.trim();
+    const pin = document.getElementById('settings-pin').value.trim();
+    const hint = document.getElementById('settings-hint').value.trim();
+
+    if (!name) {
+        showNotification('Name is required', 'error');
+        return;
+    }
+
+    try {
+        const updateData = { name };
+        if (pin) updateData.pin = pin;
+        if (hint) updateData.hint = hint;
+
+        const response = await fetch(`${API_BASE}/api/profiles/${currentProfile.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updateData)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            currentProfile = data.profile;
+            sessionStorage.setItem('currentProfile', JSON.stringify(currentProfile));
+
+            // Update UI
+            profileNameDisplay.textContent = currentProfile.name;
+            await displayUserAccessLevel();
+
+            profileSettingsModal.classList.remove('show');
+            showNotification('Profile updated successfully', 'success');
+        } else {
+            const error = await response.json();
+            showNotification(error.detail || 'Failed to update profile', 'error');
+        }
+    } catch (error) {
+        showNotification('Error updating profile: ' + error.message, 'error');
+    }
+});
 
 // Initialize on page load
 init();

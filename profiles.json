@@ -5,7 +5,9 @@
     "pin": null,
     "hint": null,
     "is_guest": true,
-    "created_at": "2025-10-30T04:45:28.494355"
+    "created_at": "2025-10-30T04:45:28.494355",
+    "has_pin": false,
+    "profile_picture": null
   },
   {
     "id": "b5b48291-a8e3-4876-b0fc-123937a3d914",
@@ -13,7 +15,9 @@
     "pin": null,
     "hint": null,
     "is_guest": false,
-    "created_at": "2025-10-30T04:46:16.791309"
+    "created_at": "2025-10-30T04:46:16.791309",
+    "has_pin": false,
+    "profile_picture": null
   },
   {
     "id": "31c7643f-9568-4059-9f47-b9e4052d58ea",
@@ -21,7 +25,9 @@
     "pin": "jews",
     "hint": "HakenKruez",
     "is_guest": false,
-    "created_at": "2025-10-30T15:33:04.402882"
+    "created_at": "2025-10-30T15:33:04.402882",
+    "has_pin": false,
+    "profile_picture": null
   },
   {
     "id": "373980db-5085-4c4b-8d5d-f4deca3e4492",
@@ -29,6 +35,18 @@
     "pin": null,
     "hint": null,
     "is_guest": false,
-    "created_at": "2025-10-30T15:43:49.300772"
+    "created_at": "2025-10-30T15:43:49.300772",
+    "has_pin": false,
+    "profile_picture": null
+  },
+  {
+    "id": "a0199acc-2c79-43d1-9d5c-9e30df9a811e",
+    "name": "Moksh",
+    "pin": null,
+    "hint": null,
+    "is_guest": false,
+    "created_at": "2025-10-31T11:09:13.781236",
+    "has_pin": false,
+    "profile_picture": null
   }
 ]

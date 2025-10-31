@@ -1,0 +1,354 @@
+"""
+Access Control System for Document Management
+Manages 3 levels of document access with IT admin configuration
+"""
+
+from pydantic import BaseModel
+from typing import List, Optional, Dict
+from datetime import datetime
+import json
+from pathlib import Path
+import uuid
+
+# Access Levels
+ACCESS_LEVEL_1 = 1  # Single document access (top-level document)
+ACCESS_LEVEL_2 = 2  # Multiple documents access (configurable)
+ACCESS_LEVEL_3 = 3  # Full access to all documents
+ACCESS_LEVEL_ADMIN = 99  # IT Admin - full control
+
+class DocumentAccess(BaseModel):
+    """Represents a document with access control"""
+    id: str
+    filename: str
+    display_name: str
+    file_path: str
+    access_level: int  # Minimum level required to access this document
+    created_at: str
+    updated_at: str
+
+class UserAccessProfile(BaseModel):
+    """Extended user profile with access level"""
+    user_id: str
+    access_level: int
+    allowed_documents: List[str]  # List of document IDs user can access
+    created_at: str
+    updated_at: str
+
+class ITAdmin(BaseModel):
+    """IT Administrator account"""
+    id: str
+    username: str
+    password_hash: str  # In production, use proper hashing
+    created_at: str
+
+class AccessControlManager:
+    """Manages document access control"""
+
+    def __init__(self):
+        self.documents_file = Path("./access_control_documents.json")
+        self.user_access_file = Path("./user_access_profiles.json")
+        self.it_admins_file = Path("./it_admins.json")
+
+        self._initialize_files()
+
+    def _initialize_files(self):
+        """Initialize access control files if they don't exist"""
+        if not self.documents_file.exists():
+            self._save_json(self.documents_file, [])
+
+        if not self.user_access_file.exists():
+            self._save_json(self.user_access_file, [])
+
+        if not self.it_admins_file.exists():
+            # Create default IT admin (username: admin, password: admin123)
+            default_admin = ITAdmin(
+                id=str(uuid.uuid4()),
+                username="admin",
+                password_hash="admin123",  # In production, use bcrypt or similar
+                created_at=datetime.now().isoformat()
+            )
+            self._save_json(self.it_admins_file, [default_admin.model_dump()])
+
+    def _load_json(self, file_path: Path) -> list:
+        """Load JSON data from file"""
+        try:
+            with open(file_path, 'r') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error loading {file_path}: {e}")
+            return []
+
+    def _save_json(self, file_path: Path, data: list):
+        """Save JSON data to file"""
+        try:
+            with open(file_path, 'w') as f:
+                json.dump(data, f, indent=2)
+        except Exception as e:
+            print(f"Error saving {file_path}: {e}")
+            raise
+
+    # Document Management
+    def register_document(self, filename: str, file_path: str, access_level: int = ACCESS_LEVEL_3) -> DocumentAccess:
+        """Register a new document in the access control system"""
+        documents = self._load_json(self.documents_file)
+
+        doc_id = str(uuid.uuid4())
+        now = datetime.now().isoformat()
+
+        new_doc = DocumentAccess(
+            id=doc_id,
+            filename=filename,
+            display_name=filename,
+            file_path=file_path,
+            access_level=access_level,
+            created_at=now,
+            updated_at=now
+        )
+
+        documents.append(new_doc.model_dump())
+        self._save_json(self.documents_file, documents)
+        return new_doc
+
+    def get_all_documents(self) -> List[DocumentAccess]:
+        """Get all registered documents"""
+        documents = self._load_json(self.documents_file)
+        return [DocumentAccess(**doc) for doc in documents]
+
+    def get_document_by_id(self, doc_id: str) -> Optional[DocumentAccess]:
+        """Get a document by ID"""
+        documents = self._load_json(self.documents_file)
+        for doc in documents:
+            if doc['id'] == doc_id:
+                return DocumentAccess(**doc)
+        return None
+
+    def update_document_access_level(self, doc_id: str, access_level: int) -> Optional[DocumentAccess]:
+        """Update the access level required for a document"""
+        documents = self._load_json(self.documents_file)
+
+        for doc in documents:
+            if doc['id'] == doc_id:
+                doc['access_level'] = access_level
+                doc['updated_at'] = datetime.now().isoformat()
+                self._save_json(self.documents_file, documents)
+                return DocumentAccess(**doc)
+
+        return None
+
+    def delete_document(self, doc_id: str) -> bool:
+        """Remove a document from access control"""
+        documents = self._load_json(self.documents_file)
+        original_count = len(documents)
+        documents = [doc for doc in documents if doc['id'] != doc_id]
+
+        if len(documents) < original_count:
+            self._save_json(self.documents_file, documents)
+            return True
+        return False
+
+    # User Access Management
+    def create_user_access_profile(self, user_id: str, access_level: int) -> UserAccessProfile:
+        """Create an access profile for a user"""
+        user_profiles = self._load_json(self.user_access_file)
+
+        # Check if user already has a profile
+        for profile in user_profiles:
+            if profile['user_id'] == user_id:
+                raise ValueError(f"User {user_id} already has an access profile")
+
+        now = datetime.now().isoformat()
+
+        # Determine allowed documents based on access level
+        allowed_docs = self._get_allowed_documents_by_level(access_level)
+
+        new_profile = UserAccessProfile(
+            user_id=user_id,
+            access_level=access_level,
+            allowed_documents=allowed_docs,
+            created_at=now,
+            updated_at=now
+        )
+
+        user_profiles.append(new_profile.model_dump())
+        self._save_json(self.user_access_file, user_profiles)
+        return new_profile
+
+    def get_user_access_profile(self, user_id: str) -> Optional[UserAccessProfile]:
+        """Get a user's access profile"""
+        user_profiles = self._load_json(self.user_access_file)
+        for profile in user_profiles:
+            if profile['user_id'] == user_id:
+                return UserAccessProfile(**profile)
+        return None
+
+    def update_user_access_level(self, user_id: str, access_level: int) -> Optional[UserAccessProfile]:
+        """Update a user's access level"""
+        user_profiles = self._load_json(self.user_access_file)
+
+        for profile in user_profiles:
+            if profile['user_id'] == user_id:
+                profile['access_level'] = access_level
+                profile['allowed_documents'] = self._get_allowed_documents_by_level(access_level)
+                profile['updated_at'] = datetime.now().isoformat()
+                self._save_json(self.user_access_file, user_profiles)
+                return UserAccessProfile(**profile)
+
+        return None
+
+    def assign_documents_to_user(self, user_id: str, document_ids: List[str]) -> Optional[UserAccessProfile]:
+        """Manually assign specific documents to a user (for Level 2)"""
+        user_profiles = self._load_json(self.user_access_file)
+
+        for profile in user_profiles:
+            if profile['user_id'] == user_id:
+                profile['allowed_documents'] = document_ids
+                profile['updated_at'] = datetime.now().isoformat()
+                self._save_json(self.user_access_file, user_profiles)
+                return UserAccessProfile(**profile)
+
+        return None
+
+    def _get_allowed_documents_by_level(self, access_level: int) -> List[str]:
+        """Determine allowed documents based on access level"""
+        documents = self.get_all_documents()
+
+        if access_level == ACCESS_LEVEL_3 or access_level == ACCESS_LEVEL_ADMIN:
+            # Level 3 and Admin: All documents
+            return [doc.id for doc in documents]
+
+        elif access_level == ACCESS_LEVEL_1:
+            # Level 1: Only the first/top document
+            if documents:
+                # Sort by created_at to get the first uploaded document
+                sorted_docs = sorted(documents, key=lambda x: x.created_at)
+                return [sorted_docs[0].id]
+            return []
+
+        elif access_level == ACCESS_LEVEL_2:
+            # Level 2: First half of documents (or manually assigned later)
+            if documents:
+                sorted_docs = sorted(documents, key=lambda x: x.created_at)
+                mid_point = max(1, len(sorted_docs) // 2)
+                return [doc.id for doc in sorted_docs[:mid_point]]
+            return []
+
+        return []
+
+    def check_document_access(self, user_id: str, doc_id: str) -> bool:
+        """Check if a user has access to a specific document"""
+        user_profile = self.get_user_access_profile(user_id)
+
+        if not user_profile:
+            # No access profile = no access
+            return False
+
+        # Admin has access to everything
+        if user_profile.access_level == ACCESS_LEVEL_ADMIN:
+            return True
+
+        # Check if document is in user's allowed list
+        return doc_id in user_profile.allowed_documents
+
+    def get_user_accessible_documents(self, user_id: str) -> List[DocumentAccess]:
+        """Get all documents a user can access"""
+        user_profile = self.get_user_access_profile(user_id)
+
+        if not user_profile:
+            return []
+
+        all_documents = self.get_all_documents()
+
+        if user_profile.access_level == ACCESS_LEVEL_ADMIN:
+            return all_documents
+
+        # Filter documents based on allowed_documents
+        accessible = [
+            doc for doc in all_documents
+            if doc.id in user_profile.allowed_documents
+        ]
+
+        return accessible
+
+    # IT Admin Management
+    def authenticate_admin(self, username: str, password: str) -> Optional[ITAdmin]:
+        """Authenticate an IT admin"""
+        admins = self._load_json(self.it_admins_file)
+
+        for admin in admins:
+            if admin['username'] == username and admin['password_hash'] == password:
+                return ITAdmin(**admin)
+
+        return None
+
+    def create_it_admin(self, username: str, password: str) -> ITAdmin:
+        """Create a new IT admin account"""
+        admins = self._load_json(self.it_admins_file)
+
+        # Check if username already exists
+        for admin in admins:
+            if admin['username'] == username:
+                raise ValueError(f"Admin username '{username}' already exists")
+
+        new_admin = ITAdmin(
+            id=str(uuid.uuid4()),
+            username=username,
+            password_hash=password,  # In production, hash this properly
+            created_at=datetime.now().isoformat()
+        )
+
+        admins.append(new_admin.model_dump())
+        self._save_json(self.it_admins_file, admins)
+        return new_admin
+
+    def get_all_admins(self) -> List[ITAdmin]:
+        """Get all IT admin accounts"""
+        admins = self._load_json(self.it_admins_file)
+        return [ITAdmin(**admin) for admin in admins]
+
+    # Bulk Operations
+    def sync_documents_from_directory(self, directory_path: Path):
+        """Sync documents from a directory with the access control system"""
+        if not directory_path.exists():
+            return
+
+        existing_docs = self.get_all_documents()
+        existing_filenames = {doc.filename for doc in existing_docs}
+
+        # Add new documents
+        for file_path in directory_path.iterdir():
+            if file_path.is_file() and file_path.suffix.lower() in ['.pdf', '.csv', '.docx']:
+                if file_path.name not in existing_filenames:
+                    self.register_document(
+                        filename=file_path.name,
+                        file_path=str(file_path),
+                        access_level=ACCESS_LEVEL_3  # Default to Level 3
+                    )
+                    print(f"Registered new document: {file_path.name}")
+
+    def get_access_statistics(self) -> Dict:
+        """Get statistics about the access control system"""
+        documents = self.get_all_documents()
+        user_profiles = self._load_json(self.user_access_file)
+        admins = self.get_all_admins()
+
+        level_counts = {1: 0, 2: 0, 3: 0, 99: 0}
+        for profile in user_profiles:
+            level = profile['access_level']
+            if level in level_counts:
+                level_counts[level] += 1
+
+        return {
+            "total_documents": len(documents),
+            "total_users": len(user_profiles),
+            "total_admins": len(admins),
+            "users_by_level": {
+                "level_1": level_counts[1],
+                "level_2": level_counts[2],
+                "level_3": level_counts[3],
+                "admin": level_counts[99]
+            }
+        }
+
+
+# Global instance
+access_control = AccessControlManager()

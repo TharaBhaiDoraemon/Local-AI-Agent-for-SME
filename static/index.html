@@ -71,6 +71,58 @@
         </div>
     </div>
 
+    <!-- Profile Settings Modal -->
+    <div id="profile-settings-modal" class="modal">
+        <div class="modal-content">
+            <h2>Profile Settings</h2>
+            <form id="profile-settings-form">
+                <!-- Profile Picture -->
+                <div class="form-group">
+                    <label>Profile Picture</label>
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                        <div id="profile-pic-preview" style="width: 80px; height: 80px; border-radius: 50%; background: #e9ecef; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </div>
+                        <div>
+                            <input type="file" id="profile-pic-input" accept="image/*" style="display: none;">
+                            <button type="button" id="upload-pic-btn" class="btn-secondary" style="margin-bottom: 5px;">Choose Picture</button>
+                            <button type="button" id="remove-pic-btn" class="btn-secondary" style="display: none;">Remove Picture</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Username -->
+                <div class="form-group">
+                    <label for="settings-name">Name</label>
+                    <input type="text" id="settings-name" required placeholder="Enter your name">
+                </div>
+
+                <!-- Change PIN -->
+                <div class="form-group">
+                    <label for="settings-pin">
+                        New PIN/Password
+                        <span class="hint-text">Leave empty to keep current</span>
+                    </label>
+                    <input type="password" id="settings-pin" placeholder="Enter new PIN or password">
+                </div>
+
+                <!-- PIN Hint -->
+                <div class="form-group">
+                    <label for="settings-hint">PIN Hint</label>
+                    <input type="text" id="settings-hint" placeholder="Hint for your password">
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" id="cancel-settings-btn" class="btn-secondary">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="container">
         <!-- Header -->
         <header class="header">
@@ -83,6 +135,12 @@
                         <circle cx="12" cy="7" r="4"></circle>
                     </svg>
                     <span id="profile-name-display">Loading...</span>
+                    <button id="profile-settings-btn" class="icon-btn-small" title="Profile Settings">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3"></path>
+                        </svg>
+                    </button>
                     <button id="switch-profile-btn" class="icon-btn-small" title="Switch Profile">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="17 1 21 5 17 9"></polyline>
