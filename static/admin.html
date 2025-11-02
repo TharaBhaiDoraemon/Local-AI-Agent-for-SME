@@ -804,6 +804,7 @@
         <div class="tabs">
             <button class="tab active" onclick="switchTab('users')">User Management</button>
             <button class="tab" onclick="switchTab('documents')">Document Management</button>
+            <button class="tab" onclick="switchTab('models')">Model Management</button>
         </div>
 
         <!-- User Management Tab -->
@@ -837,6 +838,84 @@
                     </tr>
                 </thead>
                 <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- Model Management Tab -->
+        <div id="modelsTab" class="tab-content">
+            <h2>Ollama Model Management</h2>
+
+            <!-- Current Models Section -->
+            <div style="background: var(--background); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h3 style="margin-bottom: 15px;">Current Models</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label>LLM Model (for chat)</label>
+                        <select id="llmModelSelect" class="form-control">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Embedding Model (for vector search)</label>
+                        <select id="embeddingModelSelect" class="form-control">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="saveModelSelection()" style="margin-top: 10px;">
+                    💾 Save Model Selection
+                </button>
+                <button class="btn btn-sm" onclick="refreshModels()" style="margin-top: 10px; margin-left: 10px;">
+                    🔄 Refresh Model List
+                </button>
+            </div>
+
+            <!-- Install New Model Section -->
+            <div style="background: var(--background); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h3 style="margin-bottom: 15px;">Install New Model</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                    Browse available models at
+                    <a href="https://ollama.com/library" target="_blank" style="color: var(--primary-color);">
+                        https://ollama.com/library
+                    </a>
+                </p>
+                <div style="display: flex; gap: 10px;">
+                    <input
+                        type="text"
+                        id="newModelName"
+                        placeholder="Enter model name (e.g., llama2, mistral, codellama)"
+                        style="flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text-primary);"
+                    >
+                    <button class="btn btn-primary" onclick="installNewModel()">
+                        📥 Install Model
+                    </button>
+                </div>
+                <div id="installStatus" style="margin-top: 10px;"></div>
+            </div>
+
+            <!-- Available Models Table -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0;">Installed Models</h3>
+                <button class="btn btn-sm" onclick="refreshModels()" title="Refresh model list">
+                    🔄 Refresh Models
+                </button>
+            </div>
+            <div id="modelsLoadingError" style="display: none; background: #fee2e2; color: #dc2626; padding: 12px; border-radius: 5px; margin-bottom: 15px;">
+                <strong>Error loading models:</strong> <span id="modelsErrorMessage"></span>
+            </div>
+            <table id="modelsTable">
+                <thead>
+                    <tr>
+                        <th>Model Name</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="modelsTableBody">
+                    <tr>
+                        <td colspan="3" style="text-align: center;">Loading models...</td>
+                    </tr>
+                </tbody>
             </table>
         </div>
     </div>
@@ -952,6 +1031,7 @@
             await loadStatistics();
             await loadUsers();
             await loadDocuments();
+            await loadModels();
         }
 
         async function loadStatistics() {
@@ -1398,6 +1478,199 @@
                 dropdown.classList.remove('show');
             }
         });
+
+        // ============================================================================
+        // MODEL MANAGEMENT FUNCTIONS
+        // ============================================================================
+
+        async function loadModels() {
+            console.log('loadModels() called');
+            const errorDiv = document.getElementById('modelsLoadingError');
+            const errorMessage = document.getElementById('modelsErrorMessage');
+
+            try {
+                // Hide error message
+                errorDiv.style.display = 'none';
+
+                // Load available models
+                console.log('Fetching models from:', `${API_BASE}/models/available`);
+                const modelsResponse = await fetch(`${API_BASE}/models/available`);
+                console.log('Models response status:', modelsResponse.status);
+
+                if (!modelsResponse.ok) {
+                    throw new Error(`HTTP ${modelsResponse.status}: ${modelsResponse.statusText}`);
+                }
+
+                const modelsData = await modelsResponse.json();
+                console.log('Models data received:', modelsData);
+
+                // Load current model selection
+                console.log('Fetching current config from:', `${API_BASE}/models/current`);
+                const currentResponse = await fetch(`${API_BASE}/models/current`);
+                console.log('Current response status:', currentResponse.status);
+
+                if (!currentResponse.ok) {
+                    throw new Error(`HTTP ${currentResponse.status}: ${currentResponse.statusText}`);
+                }
+
+                const currentData = await currentResponse.json();
+                console.log('Current config received:', currentData);
+
+                // Populate dropdowns
+                const llmSelect = document.getElementById('llmModelSelect');
+                const embeddingSelect = document.getElementById('embeddingModelSelect');
+
+                llmSelect.innerHTML = '';
+                embeddingSelect.innerHTML = '';
+
+                if (modelsData.models && modelsData.models.length > 0) {
+                    console.log(`Populating ${modelsData.models.length} models`);
+
+                    modelsData.models.forEach(model => {
+                        const llmOption = document.createElement('option');
+                        llmOption.value = model;
+                        llmOption.textContent = model;
+                        if (model === currentData.llm_model) {
+                            llmOption.selected = true;
+                        }
+                        llmSelect.appendChild(llmOption);
+
+                        const embOption = document.createElement('option');
+                        embOption.value = model;
+                        embOption.textContent = model;
+                        if (model === currentData.embedding_model) {
+                            embOption.selected = true;
+                        }
+                        embeddingSelect.appendChild(embOption);
+                    });
+
+                    // Populate models table
+                    const tbody = document.getElementById('modelsTableBody');
+                    tbody.innerHTML = '';
+
+                    modelsData.models.forEach(model => {
+                        const row = tbody.insertRow();
+                        let modelType = 'General';
+                        let status = '';
+
+                        if (model === currentData.llm_model) {
+                            status += '<span class="badge badge-level-2">Active LLM</span> ';
+                        }
+                        if (model === currentData.embedding_model) {
+                            status += '<span class="badge badge-level-3">Active Embedding</span>';
+                        }
+                        if (!status) {
+                            status = '<span class="badge badge-none">Available</span>';
+                        }
+
+                        row.innerHTML = `
+                            <td>${model}</td>
+                            <td>${modelType}</td>
+                            <td>${status}</td>
+                        `;
+                    });
+
+                    console.log('✅ Models loaded successfully');
+                } else {
+                    console.warn('No models found in response');
+                    llmSelect.innerHTML = '<option value="">No models found</option>';
+                    embeddingSelect.innerHTML = '<option value="">No models found</option>';
+
+                    const tbody = document.getElementById('modelsTableBody');
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No models installed. Run "ollama list" to check if models are available.</td></tr>';
+
+                    // Show error message
+                    errorMessage.textContent = 'No models returned from API. Make sure Ollama is installed and models are pulled.';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('❌ Error loading models:', error);
+
+                // Show detailed error
+                errorMessage.textContent = error.message;
+                errorDiv.style.display = 'block';
+
+                // Update table with error message
+                const tbody = document.getElementById('modelsTableBody');
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--danger);">Error: ${error.message}</td></tr>`;
+
+                showMessage('Failed to load models: ' + error.message, 'error');
+            }
+        }
+
+        async function refreshModels() {
+            showMessage('Refreshing model list...', 'success');
+            await loadModels();
+            showMessage('Model list refreshed!', 'success');
+        }
+
+        async function saveModelSelection() {
+            const llmModel = document.getElementById('llmModelSelect').value;
+            const embeddingModel = document.getElementById('embeddingModelSelect').value;
+
+            if (!llmModel || !embeddingModel) {
+                showMessage('Please select both LLM and Embedding models', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/models/select`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        llm_model: llmModel,
+                        embedding_model: embeddingModel
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage(
+                        `✅ Models updated! LLM: ${llmModel}, Embedding: ${embeddingModel}. ` +
+                        `Note: Embedding model change requires application restart.`,
+                        'success'
+                    );
+                    await loadModels();
+                } else {
+                    showMessage('Failed to update models: ' + data.detail, 'error');
+                }
+            } catch (error) {
+                showMessage('Error updating models: ' + error.message, 'error');
+            }
+        }
+
+        async function installNewModel() {
+            const modelName = document.getElementById('newModelName').value.trim();
+
+            if (!modelName) {
+                showMessage('Please enter a model name', 'error');
+                return;
+            }
+
+            const statusDiv = document.getElementById('installStatus');
+            statusDiv.innerHTML = '<div class="success-message">Installing model... This may take several minutes.</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/models/install`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({model_name: modelName})
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusDiv.innerHTML = `<div class="success-message">✅ ${data.message}</div>`;
+                    document.getElementById('newModelName').value = '';
+                    await loadModels();
+                } else {
+                    statusDiv.innerHTML = `<div class="error-message">❌ ${data.detail}</div>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error-message">❌ Error: ${error.message}</div>`;
+            }
+        }
     </script>
 </body>
 </html>

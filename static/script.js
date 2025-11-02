@@ -1380,5 +1380,166 @@ profileSettingsForm?.addEventListener('submit', async (e) => {
     }
 });
 
+// ============================================================================
+// MODEL MANAGEMENT
+// ============================================================================
+
+const modelSelectorBtn = document.getElementById('model-selector-btn');
+const modelDropdown = document.getElementById('model-dropdown');
+const refreshModelsBtn = document.getElementById('refresh-models-btn');
+const mainLlmSelect = document.getElementById('main-llm-select');
+const mainEmbeddingSelect = document.getElementById('main-embedding-select');
+const saveModelsBtn = document.getElementById('save-models-btn');
+const installModelBtn = document.getElementById('install-model-btn');
+const mainModelNameInput = document.getElementById('main-model-name-input');
+const modelStatusMessage = document.getElementById('model-status-message');
+
+// Toggle model dropdown
+modelSelectorBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    modelDropdown.classList.toggle('show');
+    if (modelDropdown.classList.contains('show')) {
+        loadMainPageModels();
+    }
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    if (!modelDropdown?.contains(e.target) && !modelSelectorBtn?.contains(e.target)) {
+        modelDropdown?.classList.remove('show');
+    }
+});
+
+// Refresh models
+refreshModelsBtn?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    await loadMainPageModels();
+    showModelStatus('Models refreshed!', 'success');
+});
+
+// Load models for main page
+async function loadMainPageModels() {
+    try {
+        // Load available models
+        const modelsResponse = await fetch(`${API_BASE}/api/models/available`);
+        const modelsData = await modelsResponse.json();
+
+        // Load current model selection
+        const currentResponse = await fetch(`${API_BASE}/api/models/current`);
+        const currentData = await currentResponse.json();
+
+        // Populate dropdowns
+        mainLlmSelect.innerHTML = '';
+        mainEmbeddingSelect.innerHTML = '';
+
+        if (modelsData.models && modelsData.models.length > 0) {
+            modelsData.models.forEach(model => {
+                const llmOption = document.createElement('option');
+                llmOption.value = model;
+                llmOption.textContent = model;
+                if (model === currentData.llm_model) {
+                    llmOption.selected = true;
+                }
+                mainLlmSelect.appendChild(llmOption);
+
+                const embOption = document.createElement('option');
+                embOption.value = model;
+                embOption.textContent = model;
+                if (model === currentData.embedding_model) {
+                    embOption.selected = true;
+                }
+                mainEmbeddingSelect.appendChild(embOption);
+            });
+        } else {
+            mainLlmSelect.innerHTML = '<option value="">No models found</option>';
+            mainEmbeddingSelect.innerHTML = '<option value="">No models found</option>';
+        }
+    } catch (error) {
+        console.error('Error loading models:', error);
+        showModelStatus('Failed to load models', 'error');
+    }
+}
+
+// Save model selection
+saveModelsBtn?.addEventListener('click', async () => {
+    const llmModel = mainLlmSelect.value;
+    const embeddingModel = mainEmbeddingSelect.value;
+
+    if (!llmModel || !embeddingModel) {
+        showModelStatus('Please select both models', 'error');
+        return;
+    }
+
+    try {
+        showModelStatus('Saving models...', 'loading');
+
+        const response = await fetch(`${API_BASE}/api/models/select`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                llm_model: llmModel,
+                embedding_model: embeddingModel
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showModelStatus('Models updated successfully!', 'success');
+            setTimeout(() => {
+                modelDropdown.classList.remove('show');
+            }, 1500);
+        } else {
+            showModelStatus(data.detail || 'Failed to update models', 'error');
+        }
+    } catch (error) {
+        showModelStatus('Error: ' + error.message, 'error');
+    }
+});
+
+// Install new model
+installModelBtn?.addEventListener('click', async () => {
+    const modelName = mainModelNameInput.value.trim();
+
+    if (!modelName) {
+        showModelStatus('Please enter a model name', 'error');
+        return;
+    }
+
+    try {
+        showModelStatus('Installing ' + modelName + '... This may take several minutes.', 'loading');
+
+        const response = await fetch(`${API_BASE}/api/models/install`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({model_name: modelName})
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showModelStatus('Model installed successfully!', 'success');
+            mainModelNameInput.value = '';
+            await loadMainPageModels();
+        } else {
+            showModelStatus(data.detail || 'Failed to install model', 'error');
+        }
+    } catch (error) {
+        showModelStatus('Error: ' + error.message, 'error');
+    }
+});
+
+// Show model status message
+function showModelStatus(message, type) {
+    modelStatusMessage.textContent = message;
+    modelStatusMessage.className = 'model-status-message ' + type;
+
+    if (type === 'success') {
+        setTimeout(() => {
+            modelStatusMessage.className = 'model-status-message';
+        }, 3000);
+    }
+}
+
 // Initialize on page load
 init();

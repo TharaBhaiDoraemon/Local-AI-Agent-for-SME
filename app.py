@@ -11,6 +11,8 @@ import uvicorn
 import json
 from datetime import datetime
 import uuid
+import subprocess
+import re
 
 # Import the retriever and setup from vector.py
 from vector import retriever, get_vector_store, process_documents
@@ -40,8 +42,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Setup LLM and chain
-model = OllamaLLM(model="phi3")
+# Setup LLM and chain (will be dynamically updated)
+model = None
+chain = None
 
 template = """
 You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question.
@@ -53,7 +56,6 @@ Here is the question to answer: {input}
 """
 
 prompt = ChatPromptTemplate.from_template(template)
-chain = prompt | model
 
 # Pydantic models
 class QuestionRequest(BaseModel):
@@ -148,16 +150,109 @@ class UpdateProfileRequest(BaseModel):
     pin: Optional[str] = None
     hint: Optional[str] = None
 
+class ModelInstallRequest(BaseModel):
+    model_name: str
+
+class ModelSelectionRequest(BaseModel):
+    llm_model: str
+    embedding_model: str
+
 # Ensure directories exist
 ATTACHMENTS_DIR = Path("./attachments")
 STATIC_DIR = Path("./static")
 CHAT_HISTORY_DIR = Path("./chat_history")
 PROFILES_FILE = Path("./profiles.json")
 PROFILE_PICTURES_DIR = Path("./profile_pictures")
+MODEL_CONFIG_FILE = Path("./model_config.json")
 ATTACHMENTS_DIR.mkdir(exist_ok=True)
 STATIC_DIR.mkdir(exist_ok=True)
 CHAT_HISTORY_DIR.mkdir(exist_ok=True)
 PROFILE_PICTURES_DIR.mkdir(exist_ok=True)
+
+# Model Configuration Management
+def load_model_config():
+    """Load model configuration from disk"""
+    if not MODEL_CONFIG_FILE.exists():
+        default_config = {
+            "llm_model": "phi3:latest",
+            "embedding_model": "bge-m3:latest"
+        }
+        save_model_config(default_config)
+        return default_config
+
+    try:
+        with open(MODEL_CONFIG_FILE, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading model config: {e}")
+        return {"llm_model": "phi3", "embedding_model": "bge-m3"}
+
+def save_model_config(config: dict):
+    """Save model configuration to disk"""
+    try:
+        with open(MODEL_CONFIG_FILE, 'w') as f:
+            json.dump(config, f, indent=2)
+    except Exception as e:
+        print(f"Error saving model config: {e}")
+        raise
+
+def get_ollama_models():
+    """Fetch available Ollama models from 'ollama list'"""
+    try:
+        result = subprocess.run(['ollama', 'list'], capture_output=True, text=True, timeout=10)
+        if result.returncode != 0:
+            return []
+
+        models = []
+        lines = result.stdout.strip().split('\n')
+
+        # Skip header line
+        for line in lines[1:]:
+            if line.strip():
+                # Parse model name from the line (first column)
+                parts = re.split(r'\s+', line.strip())
+                if parts:
+                    model_name = parts[0]
+                    models.append(model_name)
+
+        return models
+    except FileNotFoundError:
+        print("Ollama CLI not found. Please ensure Ollama is installed.")
+        return []
+    except subprocess.TimeoutExpired:
+        print("Timeout while fetching Ollama models")
+        return []
+    except Exception as e:
+        print(f"Error fetching Ollama models: {e}")
+        return []
+
+def install_ollama_model(model_name: str):
+    """Install an Ollama model using 'ollama pull'"""
+    try:
+        # Run ollama pull in the background and return immediately
+        process = subprocess.Popen(
+            ['ollama', 'pull', model_name],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        return process
+    except FileNotFoundError:
+        raise Exception("Ollama CLI not found. Please ensure Ollama is installed.")
+    except Exception as e:
+        raise Exception(f"Error installing model: {str(e)}")
+
+def initialize_model():
+    """Initialize or reinitialize the LLM model"""
+    global model, chain, current_model_config
+    current_model_config = load_model_config()
+    model = OllamaLLM(model=current_model_config["llm_model"])
+    chain = prompt | model
+    return model
+
+# Initialize model config and model
+current_model_config = load_model_config()
+initialize_model()
 
 # Profile Management Functions
 def load_profiles() -> List[Profile]:
@@ -1437,6 +1532,122 @@ async def get_user_access_info(user_id: str):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting access info: {str(e)}")
+
+# ============================================================================
+# MODEL MANAGEMENT ENDPOINTS
+# ============================================================================
+
+@app.get("/api/models/available")
+async def get_available_models():
+    """
+    Get list of available Ollama models
+    """
+    try:
+        models = get_ollama_models()
+        return {
+            "status": "success",
+            "models": models,
+            "total": len(models)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching models: {str(e)}")
+
+@app.get("/api/models/current")
+async def get_current_models():
+    """
+    Get currently selected models
+    """
+    try:
+        config = load_model_config()
+        return {
+            "status": "success",
+            "llm_model": config["llm_model"],
+            "embedding_model": config["embedding_model"]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting current models: {str(e)}")
+
+@app.post("/api/models/install")
+async def install_model(request: ModelInstallRequest):
+    """
+    Install a new Ollama model
+    """
+    try:
+        if not request.model_name or request.model_name.strip() == "":
+            raise HTTPException(status_code=400, detail="Model name cannot be empty")
+
+        # Start the installation process
+        process = install_ollama_model(request.model_name)
+
+        # Wait for process to complete (you might want to make this async in production)
+        stdout, stderr = process.communicate(timeout=300)  # 5 minute timeout
+
+        if process.returncode != 0:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to install model: {stderr}"
+            )
+
+        return {
+            "status": "success",
+            "message": f"Model '{request.model_name}' installed successfully",
+            "model_name": request.model_name
+        }
+    except subprocess.TimeoutExpired:
+        raise HTTPException(
+            status_code=408,
+            detail="Model installation timed out. The model might be too large or your connection is slow."
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error installing model: {str(e)}")
+
+@app.post("/api/models/select")
+async def select_models(request: ModelSelectionRequest):
+    """
+    Update the selected LLM and embedding models
+    """
+    try:
+        # Validate that models exist
+        available_models = get_ollama_models()
+
+        if request.llm_model not in available_models:
+            raise HTTPException(
+                status_code=400,
+                detail=f"LLM model '{request.llm_model}' not found in available models"
+            )
+
+        if request.embedding_model not in available_models:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Embedding model '{request.embedding_model}' not found in available models"
+            )
+
+        # Update config
+        config = {
+            "llm_model": request.llm_model,
+            "embedding_model": request.embedding_model
+        }
+        save_model_config(config)
+
+        # Reinitialize the LLM model
+        initialize_model()
+
+        # Note: Embedding model requires vector.py to be reloaded/restarted
+        # This would typically require an application restart
+
+        return {
+            "status": "success",
+            "message": "Models updated successfully. Note: Embedding model change requires application restart.",
+            "llm_model": request.llm_model,
+            "embedding_model": request.embedding_model,
+            "requires_restart": True  # Indicate that restart is needed for embedding model
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating models: {str(e)}")
 
 # Mount static files and profile pictures
 app.mount("/static", StaticFiles(directory="static"), name="static")

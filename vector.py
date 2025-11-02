@@ -4,8 +4,26 @@ from langchain_community.document_loaders import PyPDFLoader, CSVLoader, Unstruc
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import os
 import shutil
+import json
+from pathlib import Path
 
-embeddings = OllamaEmbeddings(model="bge-m3")
+# Load model configuration
+MODEL_CONFIG_FILE = Path("./model_config.json")
+
+def load_model_config():
+    """Load model configuration from disk"""
+    if not MODEL_CONFIG_FILE.exists():
+        return {"llm_model": "phi3:latest", "embedding_model": "bge-m3:latest"}
+    try:
+        with open(MODEL_CONFIG_FILE, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading model config: {e}")
+        return {"llm_model": "phi3:latest", "embedding_model": "bge-m3:latest"}
+
+# Get embedding model from config
+model_config = load_model_config()
+embeddings = OllamaEmbeddings(model=model_config["embedding_model"])
 db_location = "./chrome_langchain_db"
 
 # Initialize vector store (don't delete existing DB)
