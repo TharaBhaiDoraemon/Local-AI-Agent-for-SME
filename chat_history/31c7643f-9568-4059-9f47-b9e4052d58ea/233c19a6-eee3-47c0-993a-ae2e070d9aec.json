@@ -1,0 +1,25 @@
+{
+  "id": "233c19a6-eee3-47c0-993a-ae2e070d9aec",
+  "title": "Write about kaustubh",
+  "created_at": "2025-11-02T17:56:53.080307",
+  "updated_at": "2025-11-02T17:59:46.071316",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Write about kaustubh",
+      "sources": [],
+      "timestamp": "2025-11-02T17:57:25.783264"
+    },
+    {
+      "role": "assistant",
+      "content": "Kaustubh Gupta's background includes his Bachelor of Technology (BTech) IT degree from National Institute of Mental Health and Neurosciences (NMIMS). He has successfully completed labs as part of the coursework. As a student at NMIMS, Kaustubh is actively engaged in learning about UX elements under Prof Ruchi K's guidance.",
+      "sources": [
+        "UI_UX_M1_Merged_Unit-1,2,3.pdf",
+        "A029 Kaustubh Lab-4. B (Module 5)_ Introducing Amazon Elastic File System.pdf",
+        "ISS01.pdf"
+      ],
+      "timestamp": "2025-11-02T17:59:46.071032"
+    }
+  ],
+  "group_id": null
+}

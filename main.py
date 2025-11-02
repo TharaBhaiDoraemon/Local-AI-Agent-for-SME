@@ -10,6 +10,8 @@ You are an expert in answering questions.
 Here are some of information you can fetch: {reviews}
 
 Here is the question to answer: {question}
+
+Suggest 2 new questions
 """
 prompt = ChatPromptTemplate.from_template(template)
 chain = prompt | model
