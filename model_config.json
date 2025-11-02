@@ -1,4 +1,4 @@
 {
-  "llm_model": "mxbai-embed-large:latest",
-  "embedding_model": "bge-m3:latest"
+  "llm_model": "qwen3:4b",
+  "embedding_model": "mxbai-embed-large:latest"
 }

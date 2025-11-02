@@ -1,0 +1,23 @@
+{
+  "id": "c1ed305a-25b3-4128-8033-b925eb1e0b4f",
+  "title": "List down benefits of cloud computing",
+  "created_at": "2025-11-03T02:35:50.721806",
+  "updated_at": "2025-11-03T02:37:36.767727",
+  "messages": [
+    {
+      "role": "user",
+      "content": "List down benefits of cloud computing",
+      "sources": [],
+      "timestamp": "2025-11-03T02:36:12.523370"
+    },
+    {
+      "role": "assistant",
+      "content": "Based on the retrieved context, here are the key benefits of cloud computing:\n\n1. **Business continuity**: Reduces impact of downtime (e.g., cloud-based backups)\n2. **Flexible scaling**: Enables automatic scaling of resources to meet demand\n3. **Flexibility of access**: Allows services from anywhere, eliminating device dependency\n4. **Application development and testing**: Supports greater scale and multi-platform testing\n5. **Simplified infrastructure management**: Consumers manage only required resources\n6. **Increased collaboration**: Enables shared and simultaneous access to resources\n7. **Masked complexity**: Hides IT operations from end users\n8. **Business agility**: Facilitates quick resource provisioning, innovation, and reduced time-to-market\n9. **Reduced IT costs**: Lowers upfront capital expenditure (CAPEX), improves resource utilization, and reduces energy/space consumption\n10. **High availability**: Ensures resource availability with fault tolerance (e.g., auto-recovery of failed VMs)",
+      "sources": [
+        "CC_M1_Merged_Unit-1,2.pdf"
+      ],
+      "timestamp": "2025-11-03T02:37:36.767305"
+    }
+  ],
+  "group_id": null
+}
