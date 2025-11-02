@@ -509,9 +509,16 @@ body {
     margin-top: 0.5rem;
 }
 
-.documents-section h3 {
-    font-size: 1rem;
+.documents-section .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 0.75rem;
+}
+
+.documents-section .section-header h3 {
+    margin: 0;
+    font-size: 1rem;
     color: var(--text-primary);
 }
 

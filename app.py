@@ -680,6 +680,9 @@ async def upload_document(file: UploadFile = File(...)):
         # Process the new document
         process_documents()
 
+        # Sync with access control system
+        access_control.sync_documents_from_directory(ATTACHMENTS_DIR)
+
         return {
             "status": "success",
             "filename": file.filename,
@@ -742,6 +745,9 @@ async def delete_document(filename: str):
 
         # Reprocess documents after deletion
         process_documents()
+
+        # Sync with access control system
+        access_control.sync_documents_from_directory(ATTACHMENTS_DIR)
 
         return {
             "status": "success",
@@ -1332,6 +1338,9 @@ async def sync_documents():
     Sync documents from attachments directory with access control system
     """
     try:
+        access_control.sync_documents_from_directory(ATTACHMENTS_DIR)
+        documents = access_control.get_all_documents()
+        
         access_control.sync_documents_from_directory(ATTACHMENTS_DIR)
         documents = access_control.get_all_documents()
         return {

@@ -12,6 +12,7 @@ const docCount = document.getElementById('doc-count');
 const newChatBtn = document.getElementById('new-chat-btn');
 const newGroupBtn = document.getElementById('new-group-btn');
 const chatList = document.getElementById('chat-list');
+const refreshDocumentsBtn = document.getElementById('refresh-documents-btn');
 
 // Profile elements
 const profileModal = document.getElementById('profile-modal');
@@ -59,6 +60,10 @@ async function init() {
     fileUpload.addEventListener('change', handleFileUpload);
     newChatBtn.addEventListener('click', createNewChat);
     newGroupBtn.addEventListener('click', createNewGroup);
+    refreshDocumentsBtn.addEventListener('click', async () => {
+        await loadDocuments();
+        showNotification('Documents refreshed!', 'success');
+    });
 
     // Profile event listeners
     createProfileBtn.addEventListener('click', showCreateProfileModal);
@@ -101,6 +106,14 @@ async function init() {
     questionInput.addEventListener('input', function() {
         this.style.height = 'auto';
         this.style.height = (this.scrollHeight) + 'px';
+    });
+
+    // Submit on Enter key (without Shift/Ctrl/Alt)
+    questionInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
+            e.preventDefault(); // Prevent default Enter behavior (new line)
+            questionForm.dispatchEvent(new Event('submit')); // Trigger form submission
+        }
     });
 }
 
