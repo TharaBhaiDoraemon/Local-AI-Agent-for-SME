@@ -381,7 +381,15 @@
         }
 
         .tab-content h2 {
-            color: var(--text-primary);
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .tab-content h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.25rem;
+            font-weight: 600;
         }
 
         .stats-grid {
@@ -720,23 +728,55 @@
         .document-list {
             max-height: 300px;
             overflow-y: auto;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border);
             border-radius: 5px;
             padding: 10px;
             margin-top: 10px;
+            background: var(--background);
         }
 
         .document-item {
-            padding: 8px;
-            margin-bottom: 5px;
-            background: #f8f9fa;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 4px;
             display: flex;
             align-items: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .document-item:hover {
+            background: var(--hover-bg, var(--primary-light));
+            border-color: var(--primary-color);
         }
 
         .document-item input[type="checkbox"] {
-            margin-right: 10px;
+            margin-right: 12px;
+            margin-left: 0;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        .document-item label {
+            color: var(--text-primary);
+            cursor: pointer;
+            user-select: none;
+            flex: 1;
+            margin: 0;
+        }
+
+        #documentSearchBox {
+            transition: all 0.2s ease;
+        }
+
+        #documentSearchBox:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px var(--primary-light);
         }
 
         .error-message {
@@ -860,15 +900,15 @@
             </div>
             <div class="stat-card">
                 <h3 id="statLevel1">0</h3>
-                <p>Level 1 Users</p>
+                <p>Low Level Users</p>
             </div>
             <div class="stat-card">
                 <h3 id="statLevel2">0</h3>
-                <p>Level 2 Users</p>
+                <p>Medium Level Users</p>
             </div>
             <div class="stat-card">
                 <h3 id="statLevel3">0</h3>
-                <p>Level 3 Users</p>
+                <p>High Level Users</p>
             </div>
         </div>
 
@@ -885,25 +925,28 @@
 
             <!-- Create User Section -->
             <div style="background: var(--background); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                <h3 style="margin-bottom: 15px;">Create New User</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; align-items: end;">
-                    <div class="form-group" style="margin: 0;">
-                        <label for="newUsername">Username</label>
-                        <input type="text" id="newUsername" placeholder="Enter username" style="padding: 10px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text-primary); width: 100%;">
+                <h3>Create New User</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px;">
+                    <div style="display: flex; flex-direction: column;">
+                        <label for="newUsername" style="color: var(--text-primary); font-weight: 500; margin-bottom: 5px; height: 20px;">Username</label>
+                        <input type="text" id="newUsername" placeholder="Enter username" style="padding: 10px 12px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text-primary); width: 100%; height: 42px; font-size: 14px;">
                     </div>
-                    <div class="form-group" style="margin: 0;">
-                        <label for="newUserPin">PIN/Password (Optional)</label>
-                        <input type="password" id="newUserPin" placeholder="Leave empty for no PIN" style="padding: 10px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text-primary); width: 100%;">
+                    <div style="display: flex; flex-direction: column;">
+                        <label for="newUserPin" style="color: var(--text-primary); font-weight: 500; margin-bottom: 5px; height: 20px;">PIN (Optional)</label>
+                        <input type="password" id="newUserPin" placeholder="Leave empty for no PIN" style="padding: 10px 12px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text-primary); width: 100%; height: 42px; font-size: 14px;">
                     </div>
-                    <div class="form-group" style="margin: 0;">
-                        <label for="newUserAccessLevel">Access Level</label>
-                        <select id="newUserAccessLevel" style="padding: 10px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text-primary); width: 100%;">
-                            <option value="1">Low Level</option>
-                            <option value="2">Medium Level</option>
-                            <option value="3">High Level</option>
+                    <div style="display: flex; flex-direction: column;">
+                        <label for="newUserAccessLevel" style="color: var(--text-primary); font-weight: 500; margin-bottom: 5px; height: 20px;">Access Level</label>
+                        <select id="newUserAccessLevel" style="padding: 10px 12px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text-primary); width: 100%; height: 42px; font-size: 14px;">
+                            <option value="1">Low Level Access</option>
+                            <option value="2">Medium Level Access</option>
+                            <option value="3">High Level Access</option>
                         </select>
                     </div>
-                    <button class="btn btn-success" onclick="createUser()" style="margin: 0; padding: 10px 20px;">Create User</button>
+                    <div style="display: flex; flex-direction: column;">
+                        <div style="height: 20px; margin-bottom: 5px;"></div>
+                        <button class="btn btn-success" onclick="createUser()" style="margin: 0; padding: 10px 20px; height: 42px;">Create User</button>
+                    </div>
                 </div>
             </div>
 
@@ -944,7 +987,7 @@
 
             <!-- Current Models Section -->
             <div style="background: var(--background); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                <h3 style="margin-bottom: 15px;">Current Models</h3>
+                <h3>Current Models</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div class="form-group">
                         <label>LLM Model (for chat)</label>
@@ -969,21 +1012,21 @@
 
             <!-- Install New Model Section -->
             <div style="background: var(--background); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                <h3 style="margin-bottom: 15px;">Install New Model</h3>
+                <h3>Install New Model</h3>
                 <p style="color: var(--text-secondary); margin-bottom: 15px;">
                     Browse available models at
                     <a href="https://ollama.com/library" target="_blank" style="color: var(--primary-color);">
                         https://ollama.com/library
                     </a>
                 </p>
-                <div style="display: flex; gap: 10px;">
+                <div style="display: flex; gap: 10px; align-items: center;">
                     <input
                         type="text"
                         id="newModelName"
                         placeholder="Enter model name (e.g., llama2, mistral, codellama)"
-                        style="flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text-primary);"
+                        style="flex: 1; padding: 10px 12px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text-primary);"
                     >
-                    <button class="btn btn-primary" onclick="installNewModel()">
+                    <button class="btn-success" onclick="installNewModel()" style="padding: 10px 20px; white-space: nowrap;">
                         📥 Install Model
                     </button>
                 </div>
@@ -992,7 +1035,7 @@
 
             <!-- Available Models Table -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="margin: 0;">Installed Models</h3>
+                <h3>Installed Models</h3>
                 <button class="btn btn-sm" onclick="refreshModels()" title="Refresh model list">
                     🔄 Refresh Models
                 </button>
@@ -1031,9 +1074,9 @@
                 <div class="form-group">
                     <label>Access Level</label>
                     <select id="modalAccessLevel" required>
-                        <option value="1">Level 1 - Single Document (Top)</option>
-                        <option value="2">Level 2 - Multiple Documents</option>
-                        <option value="3">Level 3 - All Documents</option>
+                        <option value="1">Low Level Access</option>
+                        <option value="2">Medium Level Access</option>
+                        <option value="3">High Level Access</option>
                         <option value="99">Administrator</option>
                     </select>
                 </div>
@@ -1055,6 +1098,18 @@
             </div>
             <div class="form-group">
                 <label>Select Documents</label>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input
+                        type="text"
+                        id="documentSearchBox"
+                        placeholder="Search documents by name..."
+                        style="flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text-primary);"
+                        oninput="filterDocuments()"
+                    >
+                    <button class="btn btn-sm" onclick="toggleSelectAll()" id="selectAllBtn" style="white-space: nowrap; min-width: 120px;">
+                        Select All
+                    </button>
+                </div>
                 <div id="documentsList" class="document-list"></div>
             </div>
             <button class="btn-primary" onclick="assignDocuments()">Assign Selected Documents</button>
@@ -1074,9 +1129,9 @@
             <div class="form-group">
                 <label>Access Level Required</label>
                 <select id="updateDocAccessLevel">
-                    <option value="1">Level 1</option>
-                    <option value="2">Level 2</option>
-                    <option value="3">Level 3</option>
+                    <option value="1">Low Level Access</option>
+                    <option value="2">Medium Level Access</option>
+                    <option value="3">High Level Access</option>
                 </select>
             </div>
             <button class="btn-primary" onclick="updateDocumentAccess()">Update</button>
@@ -1218,7 +1273,7 @@
                     throw new Error('Failed to assign access level');
                 }
 
-                alert(`User "${username}" created successfully with ${accessLevel === 1 ? 'Low' : accessLevel === 2 ? 'Medium' : 'High'} Level access`);
+                alert(`User "${username}" created successfully with ${accessLevel === 1 ? 'Low Level Access' : accessLevel === 2 ? 'Medium Level Access' : 'High Level Access'}`);
 
                 // Clear form
                 document.getElementById('newUsername').value = '';
@@ -1262,9 +1317,9 @@
 
         function getAccessLevelBadge(level) {
             if (level === null) return '<span class="badge badge-none">No Access</span>';
-            if (level === 1) return '<span class="badge badge-level-1">Level 1</span>';
-            if (level === 2) return '<span class="badge badge-level-2">Level 2</span>';
-            if (level === 3) return '<span class="badge badge-level-3">Level 3</span>';
+            if (level === 1) return '<span class="badge badge-level-1">Low Level Access</span>';
+            if (level === 2) return '<span class="badge badge-level-2">Medium Level Access</span>';
+            if (level === 3) return '<span class="badge badge-level-3">High Level Access</span>';
             if (level === 99) return '<span class="badge badge-admin">Admin</span>';
             return '<span class="badge badge-none">Unknown</span>';
         }
@@ -1327,12 +1382,25 @@
                 data.documents.forEach(doc => {
                     const item = document.createElement('div');
                     item.className = 'document-item';
-                    item.innerHTML = `
-                        <input type="checkbox" id="doc_${doc.id}" value="${doc.id}">
-                        <label for="doc_${doc.id}">${doc.filename}</label>
-                    `;
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `doc_${doc.id}`;
+                    checkbox.value = doc.id;
+                    checkbox.addEventListener('change', updateSelectAllButtonText);
+
+                    const label = document.createElement('label');
+                    label.htmlFor = `doc_${doc.id}`;
+                    label.textContent = doc.filename;
+
+                    item.appendChild(checkbox);
+                    item.appendChild(label);
                     container.appendChild(item);
                 });
+
+                // Reset search box and button
+                document.getElementById('documentSearchBox').value = '';
+                document.getElementById('selectAllBtn').textContent = 'Select All';
 
                 document.getElementById('assignDocsModal').classList.add('active');
             } catch (error) {
@@ -1342,6 +1410,68 @@
 
         function closeDocsModal() {
             document.getElementById('assignDocsModal').classList.remove('active');
+            // Reset search box and button when closing
+            document.getElementById('documentSearchBox').value = '';
+            document.getElementById('selectAllBtn').textContent = 'Select All';
+        }
+
+        function toggleSelectAll() {
+            const checkboxes = document.querySelectorAll('#documentsList input[type="checkbox"]');
+            const visibleCheckboxes = Array.from(checkboxes).filter(cb => {
+                const item = cb.closest('.document-item');
+                return item && item.style.display !== 'none';
+            });
+
+            const btn = document.getElementById('selectAllBtn');
+            const allChecked = visibleCheckboxes.every(cb => cb.checked);
+
+            if (allChecked) {
+                // Deselect all visible
+                visibleCheckboxes.forEach(cb => cb.checked = false);
+                btn.textContent = 'Select All';
+            } else {
+                // Select all visible
+                visibleCheckboxes.forEach(cb => cb.checked = true);
+                btn.textContent = 'Deselect All';
+            }
+        }
+
+        function filterDocuments() {
+            const searchTerm = document.getElementById('documentSearchBox').value.toLowerCase();
+            const documentItems = document.querySelectorAll('#documentsList .document-item');
+
+            let visibleCount = 0;
+            documentItems.forEach(item => {
+                const label = item.querySelector('label');
+                const filename = label.textContent.toLowerCase();
+
+                if (filename.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Update the select all button text based on current state
+            updateSelectAllButtonText();
+        }
+
+        function updateSelectAllButtonText() {
+            const checkboxes = document.querySelectorAll('#documentsList input[type="checkbox"]');
+            const visibleCheckboxes = Array.from(checkboxes).filter(cb => {
+                const item = cb.closest('.document-item');
+                return item && item.style.display !== 'none';
+            });
+
+            const btn = document.getElementById('selectAllBtn');
+            if (visibleCheckboxes.length === 0) {
+                btn.textContent = 'Select All';
+                return;
+            }
+
+            const allChecked = visibleCheckboxes.every(cb => cb.checked);
+            btn.textContent = allChecked ? 'Deselect All' : 'Select All';
         }
 
         async function assignDocuments() {

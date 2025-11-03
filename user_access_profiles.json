@@ -1,12 +1,10 @@
 [
   {
     "user_id": "guest",
-    "access_level": 2,
-    "allowed_documents": [
-      "aa72fcda-7a37-4ab8-8297-53aa28782a1a"
-    ],
+    "access_level": 1,
+    "allowed_documents": [],
     "created_at": "2025-10-31T03:33:49.890541",
-    "updated_at": "2025-10-31T03:48:08.535126"
+    "updated_at": "2025-11-03T10:21:48.917321"
   },
   {
     "user_id": "b5b48291-a8e3-4876-b0fc-123937a3d914",
@@ -18,10 +16,12 @@
       "4aa5d193-6d80-4307-9edc-ba987e563606",
       "bc3ac6bb-b3f5-47ad-a48a-fe1e70fd1cc2",
       "515d2822-65e8-4d6b-aa79-c2da124bef7b",
-      "4a21239b-99a9-4fb5-abff-a0f7e8979c18"
+      "4a21239b-99a9-4fb5-abff-a0f7e8979c18",
+      "744540c7-2d59-444f-abb9-e9e9c3d80cfc",
+      "7c4a0f39-147c-4bdc-b987-f8c573a77629"
     ],
     "created_at": "2025-10-31T03:33:49.892937",
-    "updated_at": "2025-11-02T18:10:03.386889"
+    "updated_at": "2025-11-03T09:47:24.209411"
   },
   {
     "user_id": "31c7643f-9568-4059-9f47-b9e4052d58ea",
@@ -40,13 +40,9 @@
   },
   {
     "user_id": "373980db-5085-4c4b-8d5d-f4deca3e4492",
-    "access_level": 2,
-    "allowed_documents": [
-      "5f362e92-e9b8-468c-b153-1d4e806be53a",
-      "aa72fcda-7a37-4ab8-8297-53aa28782a1a",
-      "98bd7b80-950d-49d7-a7d3-0d39b3e60ce7"
-    ],
+    "access_level": 3,
+    "allowed_documents": [],
     "created_at": "2025-11-02T18:10:10.477847",
-    "updated_at": "2025-11-02T18:10:10.477847"
+    "updated_at": "2025-11-03T10:21:54.733748"
   }
 ]

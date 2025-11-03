@@ -1,0 +1,20 @@
+[
+  {
+    "level": 1,
+    "level_name": "Low Level Access",
+    "default_documents": [],
+    "updated_at": "2025-11-03T07:49:14.179715"
+  },
+  {
+    "level": 2,
+    "level_name": "Medium Level Access",
+    "default_documents": [],
+    "updated_at": "2025-11-03T07:49:14.179762"
+  },
+  {
+    "level": 3,
+    "level_name": "High Level Access",
+    "default_documents": [],
+    "updated_at": "2025-11-03T07:49:14.179773"
+  }
+]

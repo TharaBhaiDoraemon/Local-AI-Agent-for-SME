@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Local AI Agent for SME</title>
+    <title>Intelligent System for Enterprise Operations</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
@@ -126,9 +126,11 @@
     <div class="container">
         <!-- Header -->
         <header class="header">
-            <h1>Local AI Agent for SME</h1>
-            <p class="subtitle">Ask questions about your documents using local AI</p>
-            <div class="status-bar">
+            <div class="header-left">
+                <h1>Intelligent System for Enterprise Operations</h1>
+                <p class="subtitle">Ask questions about your documents using local AI</p>
+            </div>
+            <div class="header-center">
                 <span id="current-profile" class="current-profile">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -150,6 +152,8 @@
                         </svg>
                     </button>
                 </span>
+            </div>
+            <div class="header-right">
                 <!-- Model Selection -->
                 <span class="model-selector">
                     <button id="model-selector-btn" class="icon-btn-small" title="Select AI Models">
@@ -280,6 +284,7 @@
 
                     <div id="chat-list" class="chat-list">
                         <p class="empty-state">No chat history yet</p>
+                        <div class="chat-list-resize-handle" id="chat-resize-handle"></div>
                     </div>
                 </div>
 

@@ -1,6 +1,7 @@
 """
 Access Control System for Document Management
 Manages 3 levels of document access with IT admin configuration
+All three levels (Low, Medium, High) allow selecting 1 or more documents
 """
 
 from pydantic import BaseModel
@@ -10,10 +11,10 @@ import json
 from pathlib import Path
 import uuid
 
-# Access Levels
-ACCESS_LEVEL_LOW = 1     # Low Level - Basic access to essential documents
-ACCESS_LEVEL_MEDIUM = 2  # Medium Level - Access to medium priority documents
-ACCESS_LEVEL_HIGH = 3    # High Level - Access to all standard documents
+# Access Levels - All allow manual document selection (1 or more documents)
+ACCESS_LEVEL_LOW = 1     # Low Level Access - Select 1 or more documents
+ACCESS_LEVEL_MEDIUM = 2  # Medium Level Access - Select 1 or more documents
+ACCESS_LEVEL_HIGH = 3    # High Level Access - Select 1 or more documents
 ACCESS_LEVEL_ADMIN = 99  # IT Admin - full control
 
 # Legacy level constants (for backwards compatibility)
@@ -87,19 +88,19 @@ class AccessControlManager:
             default_configs = [
                 LevelConfiguration(
                     level=ACCESS_LEVEL_LOW,
-                    level_name="Low Level",
+                    level_name="Low Level Access",
                     default_documents=[],
                     updated_at=datetime.now().isoformat()
                 ),
                 LevelConfiguration(
                     level=ACCESS_LEVEL_MEDIUM,
-                    level_name="Medium Level",
+                    level_name="Medium Level Access",
                     default_documents=[],
                     updated_at=datetime.now().isoformat()
                 ),
                 LevelConfiguration(
                     level=ACCESS_LEVEL_HIGH,
-                    level_name="High Level",
+                    level_name="High Level Access",
                     default_documents=[],
                     updated_at=datetime.now().isoformat()
                 )
@@ -233,7 +234,7 @@ class AccessControlManager:
         return None
 
     def assign_documents_to_user(self, user_id: str, document_ids: List[str]) -> Optional[UserAccessProfile]:
-        """Manually assign specific documents to a user (for Level 2)"""
+        """Manually assign specific documents to a user (for all access levels)"""
         user_profiles = self._load_json(self.user_access_file)
 
         for profile in user_profiles:

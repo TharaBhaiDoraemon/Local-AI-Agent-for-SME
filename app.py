@@ -35,7 +35,7 @@ from access_control import (
     LevelConfiguration
 )
 
-app = FastAPI(title="Local AI Agent for SME")
+app = FastAPI(title="Intelligent System for Enterprise Operations")
 
 # Enable CORS for frontend
 app.add_middleware(
@@ -1401,7 +1401,7 @@ async def assign_user_access_level(user_id: str, request: AssignAccessLevelReque
 @app.post("/api/admin/users/{user_id}/assign-documents")
 async def assign_user_documents(user_id: str, request: AssignDocumentsRequest):
     """
-    Manually assign specific documents to a user (for Level 2 custom access)
+    Manually assign specific documents to a user (for all access levels)
     """
     try:
         user_profile = access_control.assign_documents_to_user(user_id, request.document_ids)
