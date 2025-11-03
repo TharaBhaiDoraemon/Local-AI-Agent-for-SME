@@ -43,6 +43,7 @@
             --primary-light: #ffedd5;
         }
 
+
         /* Theme: Pink */
         body.theme-pink {
             --primary-color: #ec4899;
@@ -85,6 +86,70 @@
             --primary-light: #fef3c7;
         }
 
+        /* All themes use black text for better contrast */
+        body.theme-blue .btn-primary,
+        body.theme-blue .tab.active,
+        body.theme-blue .stat-card,
+        body.theme-blue .dark-mode-btn.active,
+        body.theme-blue .btn-sm,
+        body.theme-purple .btn-primary,
+        body.theme-purple .tab.active,
+        body.theme-purple .stat-card,
+        body.theme-purple .dark-mode-btn.active,
+        body.theme-purple .btn-sm,
+        body.theme-green .btn-primary,
+        body.theme-green .tab.active,
+        body.theme-green .stat-card,
+        body.theme-green .dark-mode-btn.active,
+        body.theme-green .btn-sm,
+        body.theme-orange .btn-primary,
+        body.theme-orange .tab.active,
+        body.theme-orange .stat-card,
+        body.theme-orange .dark-mode-btn.active,
+        body.theme-orange .btn-sm,
+        body.theme-pink .btn-primary,
+        body.theme-pink .tab.active,
+        body.theme-pink .stat-card,
+        body.theme-pink .dark-mode-btn.active,
+        body.theme-pink .btn-sm,
+        body.theme-teal .btn-primary,
+        body.theme-teal .tab.active,
+        body.theme-teal .stat-card,
+        body.theme-teal .dark-mode-btn.active,
+        body.theme-teal .btn-sm,
+        body.theme-red .btn-primary,
+        body.theme-red .tab.active,
+        body.theme-red .stat-card,
+        body.theme-red .dark-mode-btn.active,
+        body.theme-red .btn-sm,
+        body.theme-indigo .btn-primary,
+        body.theme-indigo .tab.active,
+        body.theme-indigo .stat-card,
+        body.theme-indigo .dark-mode-btn.active,
+        body.theme-indigo .btn-sm,
+        body.theme-emerald .btn-primary,
+        body.theme-emerald .tab.active,
+        body.theme-emerald .stat-card,
+        body.theme-emerald .dark-mode-btn.active,
+        body.theme-emerald .btn-sm,
+        body.theme-amber .btn-primary,
+        body.theme-amber .tab.active,
+        body.theme-amber .stat-card,
+        body.theme-amber .dark-mode-btn.active,
+        body.theme-amber .btn-sm,
+        body.theme-cyan .btn-primary,
+        body.theme-cyan .tab.active,
+        body.theme-cyan .stat-card,
+        body.theme-cyan .dark-mode-btn.active,
+        body.theme-cyan .btn-sm,
+        .btn-primary,
+        .tab.active,
+        .stat-card,
+        .dark-mode-btn.active,
+        .btn-sm {
+            color: #000000 !important;
+        }
+
         /* Theme: Cyan */
         body.theme-cyan {
             --primary-color: #06b6d4;
@@ -99,6 +164,7 @@
             --border: #334155;
             --text-primary: #f1f5f9;
             --text-secondary: #94a3b8;
+            --hover-bg: #334155;  /* Dark mode hover background */
         }
 
         /* Dark Mode Variations - Only change background shades */
@@ -290,7 +356,7 @@
         }
 
         .tab:hover {
-            background: var(--primary-light);
+            background: var(--hover-bg, var(--primary-light));
             border-color: var(--primary-color);
         }
 
@@ -394,21 +460,23 @@
         .theme-btn {
             background: var(--surface);
             border: 1px solid var(--border);
-            padding: 10px;
-            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
             cursor: pointer;
             box-shadow: var(--shadow);
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
             color: var(--text-primary);
         }
 
         .theme-btn:hover {
-            transform: scale(1.05);
+            background: var(--hover-bg, var(--primary-light));
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
             box-shadow: var(--shadow-lg);
-            background: var(--primary-light);
         }
 
         .theme-dropdown {
@@ -517,27 +585,31 @@
         .theme-color[data-theme="onyx"] { background: linear-gradient(135deg, #0d0d0d, #1c1c1c); }
 
         .dark-mode-btn {
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            border-radius: 6px;
-            width: 32px;
-            height: 32px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 8px;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s;
-            margin-left: 0.5rem;
+            box-shadow: var(--shadow);
         }
 
         .dark-mode-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-            border-color: rgba(255, 255, 255, 0.5);
+            background: var(--hover-bg, var(--primary-light));
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
         }
 
         .dark-mode-btn.active {
-            background: rgba(255, 255, 255, 0.3);
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
         }
 
         .badge {
@@ -701,7 +773,7 @@
     <!-- Theme Selector -->
     <div class="theme-selector">
         <button class="dark-mode-btn" onclick="toggleDarkMode()" title="Toggle dark mode">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
             </svg>
         </button>
@@ -810,6 +882,31 @@
         <!-- User Management Tab -->
         <div id="usersTab" class="tab-content active">
             <h2>User Access Management</h2>
+
+            <!-- Create User Section -->
+            <div style="background: var(--background); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h3 style="margin-bottom: 15px;">Create New User</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; align-items: end;">
+                    <div class="form-group" style="margin: 0;">
+                        <label for="newUsername">Username</label>
+                        <input type="text" id="newUsername" placeholder="Enter username" style="padding: 10px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text-primary); width: 100%;">
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label for="newUserPin">PIN/Password (Optional)</label>
+                        <input type="password" id="newUserPin" placeholder="Leave empty for no PIN" style="padding: 10px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text-primary); width: 100%;">
+                    </div>
+                    <div class="form-group" style="margin: 0;">
+                        <label for="newUserAccessLevel">Access Level</label>
+                        <select id="newUserAccessLevel" style="padding: 10px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text-primary); width: 100%;">
+                            <option value="1">Low Level</option>
+                            <option value="2">Medium Level</option>
+                            <option value="3">High Level</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-success" onclick="createUser()" style="margin: 0; padding: 10px 20px;">Create User</button>
+                </div>
+            </div>
+
             <table id="usersTable">
                 <thead>
                     <tr>
@@ -1078,6 +1175,65 @@
             }
         }
 
+        async function createUser() {
+            const username = document.getElementById('newUsername').value.trim();
+            const pin = document.getElementById('newUserPin').value.trim();
+            const accessLevel = parseInt(document.getElementById('newUserAccessLevel').value);
+
+            if (!username) {
+                alert('Please enter a username');
+                return;
+            }
+
+            try {
+                // First create the profile
+                const profileResponse = await fetch(`${API_BASE}/profiles`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: username,
+                        pin: pin || null,
+                        hint: null
+                    })
+                });
+
+                if (!profileResponse.ok) {
+                    throw new Error('Failed to create profile');
+                }
+
+                const profileData = await profileResponse.json();
+                const userId = profileData.id;
+
+                // Then assign access level
+                const accessResponse = await fetch(`${API_BASE}/admin/users/${userId}/access-level`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        access_level: accessLevel
+                    })
+                });
+
+                if (!accessResponse.ok) {
+                    throw new Error('Failed to assign access level');
+                }
+
+                alert(`User "${username}" created successfully with ${accessLevel === 1 ? 'Low' : accessLevel === 2 ? 'Medium' : 'High'} Level access`);
+
+                // Clear form
+                document.getElementById('newUsername').value = '';
+                document.getElementById('newUserPin').value = '';
+                document.getElementById('newUserAccessLevel').value = '1';
+
+                // Reload users table
+                await loadUsers();
+
+            } catch (error) {
+                console.error('Error creating user:', error);
+                alert('Error creating user: ' + error.message);
+            }
+        }
+
         async function loadDocuments() {
             try {
                 const response = await fetch(`${API_BASE}/admin/documents`);
@@ -1324,23 +1480,24 @@
             if (enabled) {
                 document.body.classList.add('dark-mode');
                 document.body.classList.add(`dark-${shade}`);
+                localStorage.setItem('adminDarkMode', 'true');
+                localStorage.setItem('adminDarkShade', shade);
             } else {
                 document.body.classList.remove('dark-mode');
-            }
-
-            localStorage.setItem('adminDarkMode', enabled);
-            if (enabled) {
-                localStorage.setItem('adminDarkShade', shade);
+                localStorage.setItem('adminDarkMode', 'false');
             }
         }
 
         function getCurrentDarkShade() {
+            // First check if any shade is currently active in the DOM
             for (const shade of darkShades) {
                 if (document.body.classList.contains(`dark-${shade}`)) {
                     return shade;
                 }
             }
-            return 'slate';
+            // If no shade in DOM, check localStorage
+            const savedShade = localStorage.getItem('adminDarkShade');
+            return savedShade || 'slate';
         }
 
         function getCurrentColorTheme() {
@@ -1410,17 +1567,15 @@
         function toggleDarkMode() {
             const isCurrentlyDark = document.body.classList.contains('dark-mode');
             const currentShade = getCurrentDarkShade();
-            
+
             if (isCurrentlyDark) {
                 // Disable dark mode
                 applyDarkMode(false);
-                localStorage.setItem('adminDarkMode', 'false');
             } else {
                 // Enable dark mode with current shade (or default to slate if no shade selected yet)
                 applyDarkMode(true, currentShade);
-                localStorage.setItem('adminDarkMode', 'true');
             }
-            
+
             updateActiveStates();
         }
         

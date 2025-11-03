@@ -22,13 +22,17 @@ from langchain_core.prompts import ChatPromptTemplate
 # Import access control system
 from access_control import (
     access_control,
+    ACCESS_LEVEL_LOW,
+    ACCESS_LEVEL_MEDIUM,
+    ACCESS_LEVEL_HIGH,
+    ACCESS_LEVEL_ADMIN,
     ACCESS_LEVEL_1,
     ACCESS_LEVEL_2,
     ACCESS_LEVEL_3,
-    ACCESS_LEVEL_ADMIN,
     DocumentAccess,
     UserAccessProfile,
-    ITAdmin
+    ITAdmin,
+    LevelConfiguration
 )
 
 app = FastAPI(title="Local AI Agent for SME")
@@ -156,6 +160,10 @@ class ModelInstallRequest(BaseModel):
 class ModelSelectionRequest(BaseModel):
     llm_model: str
     embedding_model: str
+
+class UpdateLevelConfigRequest(BaseModel):
+    level: int
+    document_ids: List[str]
 
 # Ensure directories exist
 ATTACHMENTS_DIR = Path("./attachments")
@@ -1526,9 +1534,9 @@ async def get_user_access_info(user_id: str):
             }
 
         level_names = {
-            ACCESS_LEVEL_1: "Level 1 - Single Document",
-            ACCESS_LEVEL_2: "Level 2 - Multiple Documents",
-            ACCESS_LEVEL_3: "Level 3 - All Documents",
+            ACCESS_LEVEL_LOW: "Low Level",
+            ACCESS_LEVEL_MEDIUM: "Medium Level",
+            ACCESS_LEVEL_HIGH: "High Level",
             ACCESS_LEVEL_ADMIN: "Administrator"
         }
 
@@ -1541,6 +1549,57 @@ async def get_user_access_info(user_id: str):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting access info: {str(e)}")
+
+# ============================================================================
+# LEVEL CONFIGURATION ENDPOINTS
+# ============================================================================
+
+@app.get("/api/admin/level-configurations")
+async def get_level_configurations():
+    """
+    Get all level configurations
+    """
+    try:
+        configs = access_control.get_level_configurations()
+        return {
+            "status": "success",
+            "configurations": [
+                {
+                    "level": config.level,
+                    "level_name": config.level_name,
+                    "default_documents": config.default_documents,
+                    "updated_at": config.updated_at
+                }
+                for config in configs
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting level configurations: {str(e)}")
+
+@app.put("/api/admin/level-configurations")
+async def update_level_configuration(request: UpdateLevelConfigRequest):
+    """
+    Update the default documents for a level
+    """
+    try:
+        config = access_control.update_level_configuration(request.level, request.document_ids)
+        if not config:
+            raise HTTPException(status_code=404, detail="Level configuration not found")
+
+        return {
+            "status": "success",
+            "message": f"Level configuration updated",
+            "configuration": {
+                "level": config.level,
+                "level_name": config.level_name,
+                "default_documents": config.default_documents,
+                "updated_at": config.updated_at
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating level configuration: {str(e)}")
 
 # ============================================================================
 # MODEL MANAGEMENT ENDPOINTS

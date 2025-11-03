@@ -1,7 +1,7 @@
 [
   {
     "user_id": "guest",
-    "access_level": 1,
+    "access_level": 2,
     "allowed_documents": [
       "aa72fcda-7a37-4ab8-8297-53aa28782a1a"
     ],
@@ -25,7 +25,7 @@
   },
   {
     "user_id": "31c7643f-9568-4059-9f47-b9e4052d58ea",
-    "access_level": 3,
+    "access_level": 2,
     "allowed_documents": [
       "5f362e92-e9b8-468c-b153-1d4e806be53a",
       "aa72fcda-7a37-4ab8-8297-53aa28782a1a",

@@ -11,10 +11,15 @@ from pathlib import Path
 import uuid
 
 # Access Levels
-ACCESS_LEVEL_1 = 1  # Single document access (top-level document)
-ACCESS_LEVEL_2 = 2  # Multiple documents access (configurable)
-ACCESS_LEVEL_3 = 3  # Full access to all documents
+ACCESS_LEVEL_LOW = 1     # Low Level - Basic access to essential documents
+ACCESS_LEVEL_MEDIUM = 2  # Medium Level - Access to medium priority documents
+ACCESS_LEVEL_HIGH = 3    # High Level - Access to all standard documents
 ACCESS_LEVEL_ADMIN = 99  # IT Admin - full control
+
+# Legacy level constants (for backwards compatibility)
+ACCESS_LEVEL_1 = 1
+ACCESS_LEVEL_2 = 2
+ACCESS_LEVEL_3 = 3
 
 class DocumentAccess(BaseModel):
     """Represents a document with access control"""
@@ -41,6 +46,13 @@ class ITAdmin(BaseModel):
     password_hash: str  # In production, use proper hashing
     created_at: str
 
+class LevelConfiguration(BaseModel):
+    """Configuration for access levels and their default documents"""
+    level: int
+    level_name: str
+    default_documents: List[str]  # List of document IDs
+    updated_at: str
+
 class AccessControlManager:
     """Manages document access control"""
 
@@ -48,6 +60,7 @@ class AccessControlManager:
         self.documents_file = Path("./access_control_documents.json")
         self.user_access_file = Path("./user_access_profiles.json")
         self.it_admins_file = Path("./it_admins.json")
+        self.level_config_file = Path("./level_configurations.json")
 
         self._initialize_files()
 
@@ -68,6 +81,30 @@ class AccessControlManager:
                 created_at=datetime.now().isoformat()
             )
             self._save_json(self.it_admins_file, [default_admin.model_dump()])
+
+        if not self.level_config_file.exists():
+            # Create default level configurations
+            default_configs = [
+                LevelConfiguration(
+                    level=ACCESS_LEVEL_LOW,
+                    level_name="Low Level",
+                    default_documents=[],
+                    updated_at=datetime.now().isoformat()
+                ),
+                LevelConfiguration(
+                    level=ACCESS_LEVEL_MEDIUM,
+                    level_name="Medium Level",
+                    default_documents=[],
+                    updated_at=datetime.now().isoformat()
+                ),
+                LevelConfiguration(
+                    level=ACCESS_LEVEL_HIGH,
+                    level_name="High Level",
+                    default_documents=[],
+                    updated_at=datetime.now().isoformat()
+                )
+            ]
+            self._save_json(self.level_config_file, [config.model_dump() for config in default_configs])
 
     def _load_json(self, file_path: Path) -> list:
         """Load JSON data from file"""
@@ -209,29 +246,21 @@ class AccessControlManager:
         return None
 
     def _get_allowed_documents_by_level(self, access_level: int) -> List[str]:
-        """Determine allowed documents based on access level"""
+        """Determine allowed documents based on access level configuration"""
         documents = self.get_all_documents()
 
-        if access_level == ACCESS_LEVEL_3 or access_level == ACCESS_LEVEL_ADMIN:
-            # Level 3 and Admin: All documents
+        if access_level == ACCESS_LEVEL_ADMIN:
+            # Admin: All documents
             return [doc.id for doc in documents]
 
-        elif access_level == ACCESS_LEVEL_1:
-            # Level 1: Only the first/top document
-            if documents:
-                # Sort by created_at to get the first uploaded document
-                sorted_docs = sorted(documents, key=lambda x: x.created_at)
-                return [sorted_docs[0].id]
-            return []
+        # Get configured documents for this level
+        level_configs = self._load_json(self.level_config_file)
+        for config in level_configs:
+            if config['level'] == access_level:
+                # Return configured default documents for this level
+                return config.get('default_documents', [])
 
-        elif access_level == ACCESS_LEVEL_2:
-            # Level 2: First half of documents (or manually assigned later)
-            if documents:
-                sorted_docs = sorted(documents, key=lambda x: x.created_at)
-                mid_point = max(1, len(sorted_docs) // 2)
-                return [doc.id for doc in sorted_docs[:mid_point]]
-            return []
-
+        # Fallback: return empty list if level not configured
         return []
 
     def check_document_access(self, user_id: str, doc_id: str) -> bool:
@@ -348,6 +377,33 @@ class AccessControlManager:
                 "admin": level_counts[99]
             }
         }
+
+    # Level Configuration Methods
+    def get_level_configurations(self) -> List[LevelConfiguration]:
+        """Get all level configurations"""
+        configs = self._load_json(self.level_config_file)
+        return [LevelConfiguration(**config) for config in configs]
+
+    def get_level_configuration(self, level: int) -> Optional[LevelConfiguration]:
+        """Get configuration for a specific level"""
+        configs = self._load_json(self.level_config_file)
+        for config in configs:
+            if config['level'] == level:
+                return LevelConfiguration(**config)
+        return None
+
+    def update_level_configuration(self, level: int, document_ids: List[str]) -> Optional[LevelConfiguration]:
+        """Update the default documents for a level"""
+        configs = self._load_json(self.level_config_file)
+
+        for config in configs:
+            if config['level'] == level:
+                config['default_documents'] = document_ids
+                config['updated_at'] = datetime.now().isoformat()
+                self._save_json(self.level_config_file, configs)
+                return LevelConfiguration(**config)
+
+        return None
 
 
 # Global instance

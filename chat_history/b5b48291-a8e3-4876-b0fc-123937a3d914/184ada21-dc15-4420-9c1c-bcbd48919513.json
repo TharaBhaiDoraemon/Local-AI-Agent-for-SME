@@ -1,8 +1,23 @@
 {
   "id": "184ada21-dc15-4420-9c1c-bcbd48919513",
-  "title": "New Chat",
+  "title": "What did i do at AAI internship",
   "created_at": "2025-11-03T03:11:06.677351",
-  "updated_at": "2025-11-03T03:11:06.677351",
-  "messages": [],
-  "group_id": null
+  "updated_at": "2025-11-03T05:09:59.518810",
+  "messages": [
+    {
+      "role": "user",
+      "content": "What did i do at AAI internship",
+      "sources": [],
+      "timestamp": "2025-11-03T04:54:00.538565"
+    },
+    {
+      "role": "assistant",
+      "content": "At AAI internship, I worked with the Airport Collaborative Decision Making (ACDM) department to design and implement an end-to-end solution for automating the extraction of data from flight progress strips. I used OpenCV for image preprocessing, PaddleOCR for text recognition, and Flask for building a user-friendly web interface. This project successfully streamlined manual air traffic management processes, reduced data entry time, improved accuracy through programmatic error correction, and laid groundwork for advanced data analytics applications in aviation.",
+      "sources": [
+        "AAI_Internship_Project_Report.pdf"
+      ],
+      "timestamp": "2025-11-03T04:55:02.617622"
+    }
+  ],
+  "group_id": "2d9494fd-1efc-496b-92b5-fb4140cc1180"
 }

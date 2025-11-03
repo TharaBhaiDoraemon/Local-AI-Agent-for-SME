@@ -312,7 +312,7 @@ body {
     border: 1px solid var(--border);
     border-radius: 6px;
     padding: 0.75rem;
-    cursor: pointer;
+    cursor: grab;
     transition: all 0.2s;
 }
 
@@ -471,10 +471,40 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    min-height: 40px;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s;
 }
 
 .group-chats.collapsed {
     display: none;
+}
+
+.group-chats:empty::after {
+    content: 'Drag chats here';
+    display: block;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    padding: 0.5rem;
+    opacity: 0.5;
+}
+
+/* Drag and Drop Styles */
+.chat-item.dragging {
+    opacity: 0.5;
+    transform: scale(0.98);
+    cursor: grabbing;
+}
+
+.group-chats.drag-over {
+    background: var(--primary-light);
+    border: 2px dashed var(--primary-color);
+    border-radius: 6px;
+    padding: 0.5rem;
+    min-height: 60px;
+    transition: all 0.2s;
 }
 
 .upload-section {
@@ -710,6 +740,10 @@ body {
     line-height: 1.6;
     white-space: pre-wrap;
     word-wrap: break-word;
+}
+
+.message-text strong {
+    font-weight: 600;
 }
 
 .message-sources {

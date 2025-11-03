@@ -112,7 +112,9 @@ async function init() {
     questionInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
             e.preventDefault(); // Prevent default Enter behavior (new line)
-            questionForm.dispatchEvent(new Event('submit')); // Trigger form submission
+            // Create a proper submit event that can be cancelled
+            const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+            questionForm.dispatchEvent(submitEvent); // Trigger form submission
         }
     });
 }
@@ -633,6 +635,13 @@ async function loadGroupsAndChats() {
             chatList.appendChild(ungroupedHeader);
 
             const ungroupedChats = document.getElementById('group-ungrouped');
+
+            // Make ungrouped container a drop target
+            ungroupedChats.dataset.groupId = 'ungrouped';
+            ungroupedChats.addEventListener('dragover', handleGroupDragOver);
+            ungroupedChats.addEventListener('drop', handleGroupDrop);
+            ungroupedChats.addEventListener('dragleave', handleGroupDragLeave);
+
             data.ungrouped.forEach(session => {
                 const chatElement = createChatElement(session);
                 ungroupedChats.appendChild(chatElement);
@@ -692,8 +701,15 @@ function createGroupElement(group, chats) {
 
     groupDiv.querySelector(`#group-${group.id}`);
     const groupChats = groupDiv.querySelector(`#group-${group.id}`);
+
+    // Make group container a drop target
+    groupChats.dataset.groupId = group.id;
+    groupChats.addEventListener('dragover', handleGroupDragOver);
+    groupChats.addEventListener('drop', handleGroupDrop);
+    groupChats.addEventListener('dragleave', handleGroupDragLeave);
+
     chats.forEach(session => {
-        const chatElement = createChatElement(session, group.id);
+        const chatElement = createChatElement(session);
         groupChats.appendChild(chatElement);
     });
 
@@ -730,6 +746,102 @@ function enableGroupRename(groupId) {
     }
 }
 
+// Drag and Drop handlers
+let draggedChatId = null;
+let draggedFromGroupId = null;
+
+function handleChatDragStart(e) {
+    draggedChatId = e.currentTarget.dataset.chatId;
+    draggedFromGroupId = e.currentTarget.dataset.groupId;
+    e.currentTarget.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.currentTarget.innerHTML);
+    console.log('Drag started:', { chatId: draggedChatId, fromGroup: draggedFromGroupId });
+}
+
+function handleChatDragEnd(e) {
+    e.currentTarget.classList.remove('dragging');
+    // Remove all drag-over classes
+    document.querySelectorAll('.group-chats').forEach(el => {
+        el.classList.remove('drag-over');
+    });
+}
+
+function handleGroupDragOver(e) {
+    if (e.preventDefault) {
+        e.preventDefault(); // Allows us to drop
+    }
+    e.dataTransfer.dropEffect = 'move';
+
+    const groupChats = e.currentTarget;
+    groupChats.classList.add('drag-over');
+
+    return false;
+}
+
+function handleGroupDragLeave(e) {
+    // Only remove if we're actually leaving the element (not just entering a child)
+    if (e.currentTarget.contains(e.relatedTarget)) {
+        return;
+    }
+    e.currentTarget.classList.remove('drag-over');
+}
+
+async function handleGroupDrop(e) {
+    if (e.stopPropagation) {
+        e.stopPropagation(); // Stops some browsers from redirecting
+    }
+    e.preventDefault();
+
+    const targetGroupId = e.currentTarget.dataset.groupId;
+    e.currentTarget.classList.remove('drag-over');
+
+    console.log('Drop event:', { chatId: draggedChatId, fromGroup: draggedFromGroupId, toGroup: targetGroupId });
+
+    // Don't do anything if dropping in the same group
+    if (draggedFromGroupId === targetGroupId) {
+        console.log('Same group, ignoring drop');
+        return false;
+    }
+
+    if (draggedChatId && currentProfile) {
+        try {
+            // Convert 'ungrouped' to null for API
+            const groupIdForApi = targetGroupId === 'ungrouped' ? null : targetGroupId;
+
+            console.log('Moving chat via API:', { chatId: draggedChatId, toGroupId: groupIdForApi });
+
+            const response = await fetch(`${API_BASE}/api/chats/${draggedChatId}/move?profile_id=${currentProfile.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ group_id: groupIdForApi })
+            });
+
+            if (response.ok) {
+                // Reload the chat list to reflect changes
+                await loadGroupsAndChats();
+                showNotification('Chat moved successfully!', 'success');
+            } else {
+                const errorData = await response.json();
+                console.error('Failed to move chat:', errorData);
+                showNotification(`Failed to move chat: ${errorData.detail || 'Unknown error'}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error moving chat:', error);
+            showNotification(`Error moving chat: ${error.message}`, 'error');
+        }
+    } else {
+        console.warn('Cannot move chat:', { draggedChatId, hasProfile: !!currentProfile });
+    }
+
+    draggedChatId = null;
+    draggedFromGroupId = null;
+
+    return false;
+}
+
 async function renameGroup(groupId) {
     if (!currentProfile) return;
 
@@ -764,7 +876,10 @@ async function renameGroup(groupId) {
 }
 
 async function createNewGroup() {
-    if (!currentProfile) return;
+    if (!currentProfile) {
+        showNotification('Please select a profile first', 'error');
+        return;
+    }
 
     const name = prompt('Enter group name:');
     if (name && name.trim()) {
@@ -781,11 +896,13 @@ async function createNewGroup() {
                 showNotification('Group created successfully!', 'success');
                 await loadGroupsAndChats();
             } else {
-                showNotification('Error creating group', 'error');
+                const errorData = await response.json();
+                console.error('Error creating group:', errorData);
+                showNotification(`Error creating group: ${errorData.detail || 'Unknown error'}`, 'error');
             }
         } catch (error) {
             console.error('Error creating group:', error);
-            showNotification('Error creating group', 'error');
+            showNotification(`Error creating group: ${error.message}`, 'error');
         }
     }
 }
@@ -818,6 +935,11 @@ function createChatElement(session) {
     div.className = 'chat-item' + (session.id === currentChatId ? ' active' : '');
     div.onclick = () => switchToChat(session.id);
 
+    // Add drag-and-drop attributes
+    div.draggable = true;
+    div.dataset.chatId = session.id;
+    div.dataset.groupId = session.group_id || 'ungrouped';
+
     const preview = session.messages && session.messages.length > 0
         ? session.messages[session.messages.length - 1].content.substring(0, 50)
         : 'No messages yet';
@@ -835,11 +957,18 @@ function createChatElement(session) {
         <div class="chat-preview">${preview}</div>
     `;
 
+    // Add drag event listeners
+    div.addEventListener('dragstart', handleChatDragStart);
+    div.addEventListener('dragend', handleChatDragEnd);
+
     return div;
 }
 
 async function createNewChat() {
-    if (!currentProfile) return;
+    if (!currentProfile) {
+        showNotification('Please select a profile first', 'error');
+        return;
+    }
 
     try {
         const response = await fetch(`${API_BASE}/api/chats?profile_id=${currentProfile.id}`, {
@@ -857,12 +986,13 @@ async function createNewChat() {
             await switchToChat(session.id);
             showNotification('New chat created!', 'success');
         } else {
-            showNotification('Error creating chat', 'error');
+            console.error('Error creating chat:', session);
+            showNotification(`Error creating chat: ${session.detail || 'Unknown error'}`, 'error');
         }
 
     } catch (error) {
         console.error('Error creating chat:', error);
-        showNotification('Error creating chat', 'error');
+        showNotification(`Error creating chat: ${error.message}`, 'error');
     }
 }
 
@@ -1057,7 +1187,10 @@ function addMessage(role, text, sources = [], generationTime = null) {
 
     const messageText = document.createElement('div');
     messageText.className = 'message-text';
-    messageText.textContent = text;
+
+    // Simple formatting: only convert **text** to bold
+    const formattedText = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    messageText.innerHTML = formattedText;
 
     content.appendChild(messageText);
 
