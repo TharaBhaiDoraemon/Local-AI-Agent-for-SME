@@ -2,7 +2,7 @@
   "id": "c1ed305a-25b3-4128-8033-b925eb1e0b4f",
   "title": "List down benefits of cloud computing",
   "created_at": "2025-11-03T02:35:50.721806",
-  "updated_at": "2025-11-03T05:10:04.218828",
+  "updated_at": "2025-11-03T11:33:35.100976",
   "messages": [
     {
       "role": "user",
@@ -17,6 +17,30 @@
         "CC_M1_Merged_Unit-1,2.pdf"
       ],
       "timestamp": "2025-11-03T02:37:36.767305"
+    },
+    {
+      "role": "user",
+      "content": "What are the tasks of Information Deslgn",
+      "sources": [],
+      "timestamp": "2025-11-03T11:32:58.355029"
+    },
+    {
+      "role": "assistant",
+      "content": "I couldn't find any relevant information in the documents to answer your question.",
+      "sources": [],
+      "timestamp": "2025-11-03T11:33:01.671819"
+    },
+    {
+      "role": "user",
+      "content": "What are the tasks of Information Deslgn",
+      "sources": [],
+      "timestamp": "2025-11-03T11:33:34.952294"
+    },
+    {
+      "role": "assistant",
+      "content": "I couldn't find any relevant information in the documents to answer your question.",
+      "sources": [],
+      "timestamp": "2025-11-03T11:33:35.100925"
     }
   ],
   "group_id": "2d9494fd-1efc-496b-92b5-fb4140cc1180"

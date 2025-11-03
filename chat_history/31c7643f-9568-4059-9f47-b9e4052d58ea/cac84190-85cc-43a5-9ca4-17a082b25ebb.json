@@ -2,7 +2,7 @@
   "id": "cac84190-85cc-43a5-9ca4-17a082b25ebb",
   "title": "diffrence between UI and UX",
   "created_at": "2025-10-30T15:33:38.490125",
-  "updated_at": "2025-10-31T11:07:53.997120",
+  "updated_at": "2025-11-03T20:25:41.824728",
   "messages": [
     {
       "role": "user",
@@ -50,5 +50,5 @@
       "timestamp": "2025-10-31T11:07:53.997074"
     }
   ],
-  "group_id": null
+  "group_id": "baf4d787-2c03-4072-ba9e-d47fced1b289"
 }
