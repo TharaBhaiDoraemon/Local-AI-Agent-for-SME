@@ -1,0 +1,23 @@
+{
+  "id": "4c52a5d5-da9b-4d22-a1d7-57d5b4711152",
+  "title": "What is difference between UI UX",
+  "created_at": "2025-11-04T01:54:41.021715",
+  "updated_at": "2025-11-04T01:55:42.019036",
+  "messages": [
+    {
+      "role": "user",
+      "content": "What is difference between UI UX",
+      "sources": [],
+      "timestamp": "2025-11-04T01:55:02.517102"
+    },
+    {
+      "role": "assistant",
+      "content": "The main difference lies in their core focus areas\u2014UI concentrates on visual polish, style and responsiveness of a product's interface while also improving intuitiveness and user satisfaction. It involves designing screens, buttons, icons that bridge the interaction with technology but doesn\u2019t necessarily consider the emotional journey or feelings of users during interactions as deeply compared to UX which takes into account usability, ease-of-use aspects such as flow navigation, speedy feedback mechanisms while addressing user's overall experience and satisfaction.",
+      "sources": [
+        "UI_UX_M1_Merged_Unit-1,2,3.pdf"
+      ],
+      "timestamp": "2025-11-04T01:55:42.018920"
+    }
+  ],
+  "group_id": "2d9494fd-1efc-496b-92b5-fb4140cc1180"
+}

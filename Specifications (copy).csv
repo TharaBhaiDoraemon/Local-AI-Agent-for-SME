@@ -1,0 +1,21 @@
+Software Components,,,
+Category,Component / Technology,Version / Specification,Purpose
+"Language","Python","3.8+","Core language for the AI agent and web server."
+"Web Framework","FastAPI",,"For creating the RESTful API gateway."
+"Web Server","Uvicorn",,"ASGI server for running the FastAPI application."
+"AI/ML Service","Ollama",,"For running local LLMs (phi3) and embedding models (bge-m3)."
+"Vector Store","Chroma",,"For storing document embeddings and performing similarity search."
+"Core AI Library","LangChain",,"For building the RAG pipeline and orchestrating AI components."
+"Document Processing","pypdf",,"For loading and processing PDF documents."
+"Document Processing","python-docx",,"For loading and processing Microsoft Word documents."
+"Document Processing","pandas",,"For loading and processing CSV documents."
+"Document Processing","unstructured",,"For loading and processing various document types."
+"Text Splitting","langchain-text-splitters",,"For splitting documents into smaller chunks."
+"Development & Tools","Git",,"Version control system for source code management."
+"Development & Tools","VS Code / PyCharm",,"IDE for Python development."
+,,,
+Hardware Components,,,
+Category,Component / Device,Specification,Purpose
+"Development PC","CPU","i7 9750H","For running the local AI agent, web server, and Ollama."
+"Development PC","GPU","GTX 1650","For accelerating the performance of the Ollama models."
+"Networking","Wi-Fi Router","2.4GHz / 5GHz Band","To establish the local area network (LAN) for accessing the web interface."

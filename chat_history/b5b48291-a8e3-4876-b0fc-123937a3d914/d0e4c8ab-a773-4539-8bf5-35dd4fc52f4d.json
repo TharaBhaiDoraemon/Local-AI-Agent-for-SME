@@ -1,0 +1,23 @@
+{
+  "id": "d0e4c8ab-a773-4539-8bf5-35dd4fc52f4d",
+  "title": "What is cloud computing",
+  "created_at": "2025-11-04T02:12:18.752449",
+  "updated_at": "2025-11-04T02:13:02.810897",
+  "messages": [
+    {
+      "role": "user",
+      "content": "What is cloud computing",
+      "sources": [],
+      "timestamp": "2025-11-04T02:12:34.575717"
+    },
+    {
+      "role": "assistant",
+      "content": "Cloud Computing refers to a model that enables ubiquitous, convenient on-demand access to shared IT resources such as servers, storage, networks, applications, and services without direct management effort or service provider interaction. It provides rapid provisioning and release of these resources with minimal user intervention for better flexibility, scalability, and cost efficiency in the computing environment.",
+      "sources": [
+        "CC_M1_Merged_Unit-1,2.pdf"
+      ],
+      "timestamp": "2025-11-04T02:13:02.810730"
+    }
+  ],
+  "group_id": null
+}

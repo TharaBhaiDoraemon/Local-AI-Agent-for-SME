@@ -1,4 +1,4 @@
 {
-  "llm_model": "deepseek-r1:7b",
-  "embedding_model": "bge-m3:latest"
+  "llm_model": "phi3:latest",
+  "embedding_model": "mxbai-embed-large:latest"
 }
