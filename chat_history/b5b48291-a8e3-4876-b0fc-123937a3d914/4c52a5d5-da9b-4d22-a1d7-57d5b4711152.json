@@ -2,7 +2,7 @@
   "id": "4c52a5d5-da9b-4d22-a1d7-57d5b4711152",
   "title": "What is difference between UI UX",
   "created_at": "2025-11-04T01:54:41.021715",
-  "updated_at": "2025-11-04T01:55:42.019036",
+  "updated_at": "2025-11-08T02:03:33.678668",
   "messages": [
     {
       "role": "user",
@@ -17,6 +17,18 @@
         "UI_UX_M1_Merged_Unit-1,2,3.pdf"
       ],
       "timestamp": "2025-11-04T01:55:42.018920"
+    },
+    {
+      "role": "user",
+      "content": "What is Information Security System",
+      "sources": [],
+      "timestamp": "2025-11-08T02:02:54.319016"
+    },
+    {
+      "role": "assistant",
+      "content": "Information Security System (ISS) typically involves strategies and measures designed to protect digital systems against unauthorized access or attacks that could compromise confidentiality, integrity, and availability of data. While I don't have specific documents at my disposal based on your request for information retrieval failure, it is a well-established concept in the field of cybersecurity outlined by organizations like NIST (National Institute of Standards and Technology) which provides guidelines such as NIST Special Publication 800 series. These documents discuss various aspects including risk management, security controls, policies, procedures, and frameworks for securing information systems within an organization. For more detailed insights into ISS design principles and implementation practices, you may refer to the official publications by reputable sources such as NIST or IT governance literature from academic journals in computer science.",
+      "sources": [],
+      "timestamp": "2025-11-08T02:03:33.678569"
     }
   ],
   "group_id": "2d9494fd-1efc-496b-92b5-fb4140cc1180"

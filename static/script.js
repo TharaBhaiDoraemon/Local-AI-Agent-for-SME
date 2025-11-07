@@ -1785,6 +1785,10 @@ function toggleRecognition() {
 
 function startRecognition() {
     if (recognition) {
+        if (!navigator.onLine) {
+            showNotification('Voice chat requires an internet connection.', 'warning');
+            return;
+        }
         const selectedMicrophone = localStorage.getItem('selectedMicrophone');
         if (selectedMicrophone) {
             // This is a conceptual representation. The Web Speech API does not directly support setting the input device.

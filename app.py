@@ -19,6 +19,9 @@ from vector import retriever, get_vector_store, process_documents
 from langchain_ollama.llms import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
 
+# Import agentic RAG system
+from agentic_rag import get_agentic_rag, reinitialize_agentic_rag
+
 # Import table operations
 from table_operations import table_ops
 import pandas as pd
@@ -55,12 +58,21 @@ model = None
 chain = None
 
 template = """
-You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question.
-If you don't know the answer, just say that you don't know. Be concise and provide informative answers.
+You are a helpful assistant. Your task is to answer the user's query based ONLY on the provided documents.
 
-Here is the information you can use: {context}
+**Documents:**
+{context}
 
-Here is the question to answer: {input}
+**User Query:**
+{input}
+
+**Instructions:**
+1.  Read the "User Query" and find the answer within the "Documents".
+2.  Synthesize a clear and concise answer.
+3.  **Crucial Rule:** If the answer to the "User Query" cannot be found in the "Documents", you MUST respond with: "I'm sorry, but that information is not available in my current documents."
+4.  After your answer, suggest two relevant follow-up actions or questions for the user.
+
+**Answer:**
 """
 
 prompt = ChatPromptTemplate.from_template(template)
@@ -70,10 +82,13 @@ class QuestionRequest(BaseModel):
     question: str
     profile_id: str
     chat_id: Optional[str] = None
+    use_agentic_rag: Optional[bool] = True  # Default to agentic RAG
 
 class QuestionResponse(BaseModel):
     answer: str
     sources: List[str]
+    reasoning_steps: Optional[int] = 0  # Number of reasoning steps for agentic RAG
+    rag_type: Optional[str] = "simple"  # "simple" or "agentic"
 
 class StatusResponse(BaseModel):
     status: str
@@ -602,7 +617,8 @@ async def admin_portal():
 @app.post("/api/ask", response_model=QuestionResponse)
 async def ask_question(request: QuestionRequest):
     """
-    Ask a question and get an answer based on the document context
+    Ask a question and get an answer based on the document context.
+    Supports both simple RAG and agentic RAG modes.
     """
     try:
         if not request.question or request.question.strip() == "":
@@ -615,52 +631,71 @@ async def ask_question(request: QuestionRequest):
             except ValueError:
                 raise HTTPException(status_code=404, detail=f"Chat session not found")
 
-        # Retrieve relevant documents
-        docs = retriever.invoke(request.question)
-
-        # Filter documents based on user access level
+        # Get accessible filenames for access control
+        accessible_filenames = None
         user_access_profile = access_control.get_user_access_profile(request.profile_id)
         if user_access_profile:
             accessible_docs = access_control.get_user_accessible_documents(request.profile_id)
             accessible_filenames = {doc.filename for doc in accessible_docs}
 
-            # Filter retrieved docs to only include accessible ones
-            docs = [
-                doc for doc in docs
-                if hasattr(doc, 'metadata') and
-                'source' in doc.metadata and
-                os.path.basename(doc.metadata['source']) in accessible_filenames
-            ]
+        # Choose RAG mode
+        if request.use_agentic_rag:
+            # Use Agentic RAG
+            agent = get_agentic_rag(current_model_config["llm_model"])
+            result = agent.query(request.question, accessible_filenames)
 
-        if not docs:
-            answer = "I couldn't find any relevant information in the documents to answer your question."
-            sources = []
+            answer = result["answer"]
+            sources = result["sources"]
+            reasoning_steps = result.get("reasoning_steps", 0)
+            rag_type = "agentic"
 
-            # Save assistant response to chat history
-            if request.chat_id:
-                add_message_to_chat(request.profile_id, request.chat_id, "assistant", answer, sources)
+        else:
+            # Use Simple RAG (original implementation)
+            docs = retriever.invoke(request.question)
 
-            return QuestionResponse(answer=answer, sources=sources)
+            # Filter documents based on user access level
+            if accessible_filenames:
+                docs = [
+                    doc for doc in docs
+                    if hasattr(doc, 'metadata') and
+                    'source' in doc.metadata and
+                    os.path.basename(doc.metadata['source']) in accessible_filenames
+                ]
 
-        # Format context from documents
-        context = "\n\n".join([doc.page_content for doc in docs])
+            if not docs:
+                answer = "I couldn't find any relevant information in the documents to answer your question."
+                sources = []
+                reasoning_steps = 0
+                rag_type = "simple"
+            else:
+                # Format context from documents
+                context = "\n\n".join([doc.page_content for doc in docs])
 
-        # Generate answer using LLM
-        result = chain.invoke({"context": context, "input": request.question})
+                # Generate answer using LLM
+                result = chain.invoke({"context": context, "input": request.question})
+                answer = result
 
-        # Extract sources
-        sources = []
-        for doc in docs:
-            if hasattr(doc, 'metadata') and 'source' in doc.metadata:
-                source = os.path.basename(doc.metadata['source'])
-                if source not in sources:
-                    sources.append(source)
+                # Extract sources
+                sources = []
+                for doc in docs:
+                    if hasattr(doc, 'metadata') and 'source' in doc.metadata:
+                        source = os.path.basename(doc.metadata['source'])
+                        if source not in sources:
+                            sources.append(source)
+
+                reasoning_steps = 0
+                rag_type = "simple"
 
         # Save assistant response to chat history
         if request.chat_id:
-            add_message_to_chat(request.profile_id, request.chat_id, "assistant", result, sources)
+            add_message_to_chat(request.profile_id, request.chat_id, "assistant", answer, sources)
 
-        return QuestionResponse(answer=result, sources=sources)
+        return QuestionResponse(
+            answer=answer,
+            sources=sources,
+            reasoning_steps=reasoning_steps,
+            rag_type=rag_type
+        )
 
     except HTTPException:
         raise
