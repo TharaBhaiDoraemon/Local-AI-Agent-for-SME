@@ -7,6 +7,9 @@ import shutil
 import json
 from pathlib import Path
 
+# Import our new table operations module
+from table_operations import table_ops
+
 # Load model configuration
 MODEL_CONFIG_FILE = Path("./model_config.json")
 
@@ -75,10 +78,14 @@ def process_documents():
                 documents = loader.load_and_split()
                 print(f"Loaded {len(documents)} documents from {filename}")
             elif filename.endswith(".csv"):
+                # Process CSV with both vector embeddings and table operations
                 loader = CSVLoader(file_path)
                 documents = loader.load()
                 documents = text_splitter.split_documents(documents)
                 print(f"Loaded {len(documents)} documents from {filename}")
+                
+                # Also load the CSV for table operations
+                table_ops.load_csv_tables()
             elif filename.endswith(".docx"):
                 loader = UnstructuredWordDocumentLoader(file_path)
                 documents = loader.load()

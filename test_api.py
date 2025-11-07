@@ -1,47 +1,55 @@
-#!/usr/bin/env python3
 """
-Test script to verify the model management API endpoints
+Test API endpoints to ensure they work properly with the new functionality
 """
 import requests
 import json
 
 BASE_URL = "http://localhost:8000"
 
-print("Testing Model Management API Endpoints")
-print("=" * 50)
+def test_api_endpoints():
+    # Test the table query endpoint
+    print("Testing API endpoints...")
+    
+    # Test available tables endpoint
+    try:
+        response = requests.get(f"{BASE_URL}/api/table/available", timeout=5)
+        print(f"GET /api/table/available - Status: {response.status_code}")
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  Found {data.get('count', 0)} tables")
+            print(f"  Tables: {list(t['name'] for t in data.get('tables', []))}")
+        else:
+            print(f"  Error: {response.text}")
+    except requests.exceptions.ConnectionError:
+        print("  Server not running - API tests skipped")
+        return
+    except Exception as e:
+        print(f"  Error: {e}")
+    
+    # Test a table query
+    try:
+        query_payload = {
+            "question": "compare yt_data_2023 and yt_data_2024 sum",
+            "profile_id": "test",
+            "chat_id": None
+        }
+        
+        response = requests.post(f"{BASE_URL}/api/table/query", 
+                                json=query_payload,
+                                timeout=10)
+        print(f"POST /api/table/query - Status: {response.status_code}")
+        if response.status_code == 200:
+            data = response.json()
+            print(f"  Status: {data.get('status')}")
+            print(f"  Message: {data.get('message')}")
+            print(f"  Has data: {data.get('has_data')}")
+            print(f"  Download URL: {data.get('download_url')}")
+        else:
+            print(f"  Error: {response.text}")
+    except requests.exceptions.ConnectionError:
+        print("  Server not running - skipping query test")
+    except Exception as e:
+        print(f"  Error: {e}")
 
-try:
-    # Test 1: Get available models
-    print("\n1. Testing GET /api/models/available")
-    response = requests.get(f"{BASE_URL}/api/models/available", timeout=5)
-    print(f"   Status Code: {response.status_code}")
-    if response.status_code == 200:
-        data = response.json()
-        print(f"   Response: {json.dumps(data, indent=2)}")
-    else:
-        print(f"   Error: {response.text}")
-
-    # Test 2: Get current model selection
-    print("\n2. Testing GET /api/models/current")
-    response = requests.get(f"{BASE_URL}/api/models/current", timeout=5)
-    print(f"   Status Code: {response.status_code}")
-    if response.status_code == 200:
-        data = response.json()
-        print(f"   Response: {json.dumps(data, indent=2)}")
-    else:
-        print(f"   Error: {response.text}")
-
-    print("\n" + "=" * 50)
-    print("✅ All tests completed!")
-    print("\nIf you see models listed above, the API is working correctly.")
-    print("If not, make sure the server is running: python app.py")
-
-except requests.exceptions.ConnectionError:
-    print("\n❌ ERROR: Could not connect to the server")
-    print("Make sure the server is running:")
-    print("   python app.py")
-    print("\nThen run this test script again:")
-    print("   python test_api.py")
-
-except Exception as e:
-    print(f"\n❌ ERROR: {e}")
+if __name__ == "__main__":
+    test_api_endpoints()

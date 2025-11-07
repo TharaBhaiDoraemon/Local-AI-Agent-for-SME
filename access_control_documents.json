@@ -88,5 +88,32 @@
     "access_level": 3,
     "created_at": "2025-11-03T21:17:22.540073",
     "updated_at": "2025-11-03T21:17:22.540073"
+  },
+  {
+    "id": "67df7735-766d-479b-85e9-53bdfc0cd100",
+    "filename": "yt_data_2023.csv",
+    "display_name": "yt_data_2023.csv",
+    "file_path": "attachments/yt_data_2023.csv",
+    "access_level": 3,
+    "created_at": "2025-11-06T23:44:13.522856",
+    "updated_at": "2025-11-06T23:44:13.522856"
+  },
+  {
+    "id": "89c24f84-2736-464b-9e8b-c52e2c45d941",
+    "filename": "yt_data_2024.csv",
+    "display_name": "yt_data_2024.csv",
+    "file_path": "attachments/yt_data_2024.csv",
+    "access_level": 3,
+    "created_at": "2025-11-06T23:44:13.523458",
+    "updated_at": "2025-11-06T23:44:13.523458"
+  },
+  {
+    "id": "041f51a3-aaf1-41ec-be09-be8315b8e14e",
+    "filename": "songs_data.csv",
+    "display_name": "songs_data.csv",
+    "file_path": "attachments/songs_data.csv",
+    "access_level": 3,
+    "created_at": "2025-11-06T23:50:54.071090",
+    "updated_at": "2025-11-06T23:50:54.071090"
   }
 ]

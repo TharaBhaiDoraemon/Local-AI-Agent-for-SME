@@ -19,6 +19,10 @@ from vector import retriever, get_vector_store, process_documents
 from langchain_ollama.llms import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
 
+# Import table operations
+from table_operations import table_ops
+import pandas as pd
+
 # Import access control system
 from access_control import (
     access_control,
@@ -1717,9 +1721,108 @@ async def select_models(request: ModelSelectionRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating models: {str(e)}")
 
+# Table Operations Endpoints
+@app.post("/api/table/query")
+async def execute_table_query(request: QuestionRequest):
+    """
+    Execute a table query (join, filter, etc.) based on user question
+    """
+    try:
+        # Execute the table query
+        result = table_ops.execute_query(request.question)
+        
+        # If successful and has a DataFrame result, save it for download
+        download_url = None
+        if result['status'] == 'success' and result['result'] is not None:
+            if isinstance(result['result'], pd.DataFrame):
+                # Save result as downloadable file
+                file_path = table_ops.save_result_as_downloadable_file(
+                    result['result'], 
+                    f"query_result_{int(datetime.now().timestamp())}.csv"
+                )
+                download_url = f"/downloads/{os.path.basename(file_path)}"
+            elif isinstance(result['result'], dict) and 'table1' in result['result']:
+                # Handle case where multiple tables are returned
+                # For now, we'll work with the first table found
+                for key, value in result['result'].items():
+                    if isinstance(value, pd.DataFrame):
+                        file_path = table_ops.save_result_as_downloadable_file(
+                            value, 
+                            f"query_result_{key}_{int(datetime.now().timestamp())}.csv"
+                        )
+                        download_url = f"/downloads/{os.path.basename(file_path)}"
+                        break
+        
+        return {
+            "status": result['status'],
+            "message": result['message'],
+            "result_type": result.get('type', 'unknown'),
+            "download_url": download_url,
+            "has_data": result['result'] is not None
+        }
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error executing table query: {str(e)}")
+
+@app.get("/api/table/available")
+async def get_available_tables():
+    """
+    Get all available tables that can be used for operations
+    """
+    try:
+        table_names = table_ops.get_table_names()
+        tables_info = []
+        
+        for table_name in table_names:
+            df = table_ops.tables[table_name]['dataframe']
+            tables_info.append({
+                "name": table_name,
+                "rows": len(df),
+                "columns": list(df.columns),
+                "file_path": table_ops.tables[table_name]['file_path']
+            })
+        
+        return {
+            "status": "success",
+            "tables": tables_info,
+            "count": len(tables_info)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting available tables: {str(e)}")
+
+@app.get("/api/table/{table_name}/preview")
+async def get_table_preview(table_name: str, rows: int = 5):
+    """
+    Get a preview of a table (first N rows)
+    """
+    try:
+        if table_name not in table_ops.tables:
+            raise HTTPException(status_code=404, detail=f"Table '{table_name}' not found")
+        
+        df = table_ops.tables[table_name]['dataframe']
+        preview_data = df.head(rows).to_dict(orient='records')
+        
+        return {
+            "status": "success",
+            "table_name": table_name,
+            "preview": preview_data,
+            "total_rows": len(df),
+            "total_columns": len(df.columns),
+            "columns": list(df.columns)
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting table preview: {str(e)}")
+
 # Mount static files and profile pictures
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/profile_pictures", StaticFiles(directory="profile_pictures"), name="profile_pictures")
+
+# Mount downloads directory for downloadable files
+downloads_path = Path("downloads")
+downloads_path.mkdir(exist_ok=True)
+app.mount("/downloads", StaticFiles(directory="downloads"), name="downloads")
 
 if __name__ == "__main__":
     print("Starting Local AI Agent API server...")

@@ -1132,7 +1132,9 @@ async function handleQuestionSubmit(event) {
     const loadingId = addLoadingIndicator();
 
     try {
-        const response = await fetch(`${API_BASE}/api/ask`, {
+        // Check if this is a table operation query by calling the new table API first
+        // We can implement logic to detect table-related queries, or just try both APIs
+        const tableResponse = await fetch(`${API_BASE}/api/table/query`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1144,21 +1146,56 @@ async function handleQuestionSubmit(event) {
             })
         });
 
-        const data = await response.json();
+        const tableData = await tableResponse.json();
 
-        // Calculate generation time
-        const endTime = Date.now();
-        const generationTime = ((endTime - startTime) / 1000).toFixed(1);
+        if (tableResponse.ok && tableData.has_data) {
+            // This is a table operation result
+            let answer = tableData.message;
+            if (tableData.download_url) {
+                answer += ` <a href="${tableData.download_url}" target="_blank" class="download-link" download>Download Result</a>`;
+            }
+            
+            // Calculate generation time
+            const endTime = Date.now();
+            const generationTime = ((endTime - startTime) / 1000).toFixed(1);
 
-        // Remove loading indicator
-        removeLoadingIndicator(loadingId);
+            // Remove loading indicator
+            removeLoadingIndicator(loadingId);
 
-        if (response.ok) {
-            addMessage('assistant', data.answer, data.sources, generationTime);
+            // Add the table response to the chat
+            addMessage('assistant', answer, [], generationTime);
             // Reload chat sessions to update preview and title
             await loadGroupsAndChats();
         } else {
-            addMessage('assistant', `Error: ${data.detail || 'Unknown error occurred'}`, [], generationTime);
+            // This is a regular document query, use the original API
+            const response = await fetch(`${API_BASE}/api/ask`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    question: question,
+                    profile_id: currentProfile.id,
+                    chat_id: currentChatId
+                })
+            });
+
+            const data = await response.json();
+
+            // Calculate generation time
+            const endTime = Date.now();
+            const generationTime = ((endTime - startTime) / 1000).toFixed(1);
+
+            // Remove loading indicator
+            removeLoadingIndicator(loadingId);
+
+            if (response.ok) {
+                addMessage('assistant', data.answer, data.sources, generationTime);
+                // Reload chat sessions to update preview and title
+                await loadGroupsAndChats();
+            } else {
+                addMessage('assistant', `Error: ${data.detail || 'Unknown error occurred'}`, [], generationTime);
+            }
         }
 
     } catch (error) {

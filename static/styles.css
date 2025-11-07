@@ -1624,3 +1624,20 @@ body {
     color: var(--primary-color);
     border: 1px solid rgba(59, 130, 246, 0.2);
 }
+
+.download-link {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 6px 12px;
+    background: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.download-link:hover {
+    background: var(--primary-hover);
+    text-decoration: none;
+}
