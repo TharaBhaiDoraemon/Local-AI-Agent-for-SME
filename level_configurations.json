@@ -2,19 +2,28 @@
   {
     "level": 1,
     "level_name": "Low Level Access",
-    "default_documents": [],
-    "updated_at": "2025-11-03T07:49:14.179715"
+    "default_documents": [
+      "a3d34a9a-79c2-4faa-a72c-797f2a21a1da",
+      "c2a020bd-efeb-43a1-b2a6-dbea5a843358"
+    ],
+    "updated_at": "2025-11-07T22:48:29.552510"
   },
   {
     "level": 2,
     "level_name": "Medium Level Access",
-    "default_documents": [],
-    "updated_at": "2025-11-03T07:49:14.179762"
+    "default_documents": [
+      "34246c0f-105b-4508-b03f-7dc7c36590da",
+      "5faa22aa-876a-4dfc-a69e-a2f9eeb2e60b"
+    ],
+    "updated_at": "2025-11-07T22:48:29.553019"
   },
   {
     "level": 3,
     "level_name": "High Level Access",
-    "default_documents": [],
-    "updated_at": "2025-11-03T07:49:14.179773"
+    "default_documents": [
+      "e404197b-46f6-4e65-9163-31a569c94e25",
+      "942ccc80-1ef7-4e3f-a8ec-be7e2e9ed8d3"
+    ],
+    "updated_at": "2025-11-07T22:48:29.553386"
   }
 ]

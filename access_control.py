@@ -1,7 +1,15 @@
 """
 Access Control System for Document Management
-Manages 3 levels of document access with IT admin configuration
-All three levels (Low, Medium, High) allow selecting 1 or more documents
+Manages 3 levels of hierarchical document access with IT admin configuration
+
+Hierarchical Access Model:
+- Low Level (1): Access to Low level documents only
+- Medium Level (2): Access to Medium + Low level documents
+- High Level (3): Access to High + Medium + Low level documents
+- Admin (99): Access to all documents
+
+Documents can be assigned to levels, and users automatically inherit access to
+documents at their level and all levels below.
 """
 
 from pydantic import BaseModel
@@ -247,25 +255,32 @@ class AccessControlManager:
         return None
 
     def _get_allowed_documents_by_level(self, access_level: int) -> List[str]:
-        """Determine allowed documents based on access level configuration"""
+        """Determine allowed documents based on access level configuration with hierarchical access"""
         documents = self.get_all_documents()
 
         if access_level == ACCESS_LEVEL_ADMIN:
             # Admin: All documents
             return [doc.id for doc in documents]
 
-        # Get configured documents for this level
-        level_configs = self._load_json(self.level_config_file)
-        for config in level_configs:
-            if config['level'] == access_level:
-                # Return configured default documents for this level
-                return config.get('default_documents', [])
+        # Hierarchical access: users can access documents at their level and below
+        # Low level (1): only Low level documents
+        # Medium level (2): Medium + Low level documents
+        # High level (3): High + Medium + Low level documents
 
-        # Fallback: return empty list if level not configured
-        return []
+        allowed_doc_ids = []
+        level_configs = self._load_json(self.level_config_file)
+
+        # Get documents for current level and all levels below
+        for config in level_configs:
+            if config['level'] <= access_level:
+                # Add all documents configured for this level and below
+                allowed_doc_ids.extend(config.get('default_documents', []))
+
+        # Remove duplicates while preserving order
+        return list(dict.fromkeys(allowed_doc_ids))
 
     def check_document_access(self, user_id: str, doc_id: str) -> bool:
-        """Check if a user has access to a specific document"""
+        """Check if a user has access to a specific document (supports hierarchical access)"""
         user_profile = self.get_user_access_profile(user_id)
 
         if not user_profile:
@@ -276,11 +291,11 @@ class AccessControlManager:
         if user_profile.access_level == ACCESS_LEVEL_ADMIN:
             return True
 
-        # Check if document is in user's allowed list
+        # Check if document is in user's allowed list (hierarchical access already applied)
         return doc_id in user_profile.allowed_documents
 
     def get_user_accessible_documents(self, user_id: str) -> List[DocumentAccess]:
-        """Get all documents a user can access"""
+        """Get all documents a user can access (supports hierarchical access)"""
         user_profile = self.get_user_access_profile(user_id)
 
         if not user_profile:
@@ -291,13 +306,40 @@ class AccessControlManager:
         if user_profile.access_level == ACCESS_LEVEL_ADMIN:
             return all_documents
 
-        # Filter documents based on allowed_documents
+        # Filter documents based on allowed_documents (hierarchical access already applied)
         accessible = [
             doc for doc in all_documents
             if doc.id in user_profile.allowed_documents
         ]
 
         return accessible
+
+    def get_assignable_documents_for_user(self, user_id: str) -> List[DocumentAccess]:
+        """
+        Get documents that can be assigned to a user based on their access level.
+        Uses hierarchical access: user can be assigned documents at their level and below.
+        """
+        user_profile = self.get_user_access_profile(user_id)
+
+        if not user_profile:
+            return []
+
+        all_documents = self.get_all_documents()
+
+        if user_profile.access_level == ACCESS_LEVEL_ADMIN:
+            # Admin can be assigned all documents
+            return all_documents
+
+        # User can only be assigned documents at their level or below
+        # Low (1) -> only Low docs
+        # Medium (2) -> Medium + Low docs
+        # High (3) -> High + Medium + Low docs
+        assignable = [
+            doc for doc in all_documents
+            if doc.access_level <= user_profile.access_level
+        ]
+
+        return assignable
 
     # IT Admin Management
     def authenticate_admin(self, username: str, password: str) -> Optional[ITAdmin]:

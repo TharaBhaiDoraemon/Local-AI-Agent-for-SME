@@ -745,6 +745,7 @@
             align-items: center;
             transition: all 0.2s ease;
             cursor: pointer;
+            gap: 12px;
         }
 
         .document-item:hover {
@@ -753,12 +754,43 @@
         }
 
         .document-item input[type="checkbox"] {
-            margin-right: 12px;
-            margin-left: 0;
+            margin: 0;
             cursor: pointer;
             width: 18px;
             height: 18px;
             flex-shrink: 0;
+        }
+
+        .document-level-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+            min-width: 60px;
+        }
+
+        .document-level-badge.level-low {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .document-level-badge.level-medium {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .document-level-badge.level-high {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
 
         .document-item label {
@@ -1374,29 +1406,50 @@
             document.getElementById('docsModalUserName').value = userName;
 
             try {
-                const response = await fetch(`${API_BASE}/admin/documents`);
+                // Fetch documents filtered by user's access level
+                const response = await fetch(`${API_BASE}/admin/documents?user_id=${userId}`);
                 const data = await response.json();
                 const container = document.getElementById('documentsList');
                 container.innerHTML = '';
 
-                data.documents.forEach(doc => {
-                    const item = document.createElement('div');
-                    item.className = 'document-item';
+                if (data.documents.length === 0) {
+                    container.innerHTML = '<p style="color: #666; padding: 10px;">No documents available for this user\'s access level.</p>';
+                } else {
+                    data.documents.forEach(doc => {
+                        const item = document.createElement('div');
+                        item.className = 'document-item';
 
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.id = `doc_${doc.id}`;
-                    checkbox.value = doc.id;
-                    checkbox.addEventListener('change', updateSelectAllButtonText);
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.id = `doc_${doc.id}`;
+                        checkbox.value = doc.id;
+                        checkbox.addEventListener('change', updateSelectAllButtonText);
 
-                    const label = document.createElement('label');
-                    label.htmlFor = `doc_${doc.id}`;
-                    label.textContent = doc.filename;
+                        // Create access level badge
+                        const badge = document.createElement('span');
+                        badge.className = 'document-level-badge';
 
-                    item.appendChild(checkbox);
-                    item.appendChild(label);
-                    container.appendChild(item);
-                });
+                        if (doc.access_level === 1) {
+                            badge.classList.add('level-low');
+                            badge.textContent = 'Low';
+                        } else if (doc.access_level === 2) {
+                            badge.classList.add('level-medium');
+                            badge.textContent = 'Med';
+                        } else {
+                            badge.classList.add('level-high');
+                            badge.textContent = 'High';
+                        }
+
+                        const label = document.createElement('label');
+                        label.htmlFor = `doc_${doc.id}`;
+                        label.textContent = doc.filename;
+
+                        item.appendChild(checkbox);
+                        item.appendChild(badge);
+                        item.appendChild(label);
+                        container.appendChild(item);
+                    });
+                }
 
                 // Reset search box and button
                 document.getElementById('documentSearchBox').value = '';

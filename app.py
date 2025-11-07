@@ -1298,12 +1298,19 @@ async def list_admins():
 
 # Document Access Management Endpoints
 @app.get("/api/admin/documents")
-async def get_all_managed_documents():
+async def get_all_managed_documents(user_id: Optional[str] = None):
     """
     Get all documents with their access levels (for admin dashboard)
+    If user_id is provided, returns only documents assignable to that user based on their access level
     """
     try:
-        documents = access_control.get_all_documents()
+        if user_id:
+            # Get documents filtered by user's access level (hierarchical)
+            documents = access_control.get_assignable_documents_for_user(user_id)
+        else:
+            # Get all documents
+            documents = access_control.get_all_documents()
+
         return {
             "documents": [
                 {
