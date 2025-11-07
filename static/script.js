@@ -13,6 +13,41 @@ const newChatBtn = document.getElementById('new-chat-btn');
 const newGroupBtn = document.getElementById('new-group-btn');
 const chatList = document.getElementById('chat-list');
 const refreshDocumentsBtn = document.getElementById('refresh-documents-btn');
+const voiceChatBtn = document.getElementById('voice-chat-btn');
+const microphoneSelect = document.getElementById('microphone-select');
+
+// Voice recognition
+let recognition = null;
+let isRecognizing = false;
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (SpeechRecognition) {
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        questionInput.value = transcript;
+        stopRecognition();
+    };
+
+    recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        showNotification(`Speech recognition error: ${event.error}`, 'error');
+        stopRecognition();
+    };
+
+    recognition.onend = () => {
+        if (isRecognizing) {
+            stopRecognition();
+        }
+    };
+} else {
+    console.warn('Speech Recognition API not supported in this browser.');
+}
 
 // Profile elements
 const profileModal = document.getElementById('profile-modal');
@@ -101,6 +136,11 @@ async function init() {
             themeDropdown.classList.remove('show');
         }
     });
+
+    // Voice chat event listener
+    if (voiceChatBtn) {
+        voiceChatBtn.addEventListener('click', toggleRecognition);
+    }
 
     // Auto-resize textarea
     questionInput.addEventListener('input', function() {
@@ -1437,6 +1477,9 @@ async function openProfileSettings() {
     document.getElementById('settings-hint').value = currentProfile.hint || '';
     document.getElementById('settings-pin').value = '';
 
+    // Populate microphones
+    await populateMicrophones();
+
     // Load profile picture if exists
     try {
         const response = await fetch(`${API_BASE}/api/profiles/${currentProfile.id}/picture`);
@@ -1726,3 +1769,71 @@ function showModelStatus(message, type) {
 
 // Initialize on page load
 init();
+
+// Voice Recognition Functions
+function toggleRecognition() {
+    if (!recognition) {
+        showNotification('Speech Recognition API not supported in this browser.', 'error');
+        return;
+    }
+    if (isRecognizing) {
+        stopRecognition();
+    } else {
+        startRecognition();
+    }
+}
+
+function startRecognition() {
+    if (recognition) {
+        const selectedMicrophone = localStorage.getItem('selectedMicrophone');
+        if (selectedMicrophone) {
+            // This is a conceptual representation. The Web Speech API does not directly support setting the input device.
+            // This would require using navigator.mediaDevices.getUserMedia with the deviceId and integrating it with the Web Audio API.
+            // For now, we'll just log the selected device.
+            console.log('Using microphone:', selectedMicrophone);
+        }
+        isRecognizing = true;
+        voiceChatBtn.classList.add('active');
+        recognition.start();
+        showNotification('Listening...', 'info');
+    }
+}
+
+function stopRecognition() {
+    if (recognition) {
+        isRecognizing = false;
+        voiceChatBtn.classList.remove('active');
+        recognition.stop();
+        showNotification('Stopped listening.', 'info');
+    }
+}
+
+async function populateMicrophones() {
+    if (microphoneSelect) {
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const audioInputDevices = devices.filter(device => device.kind === 'audioinput');
+            
+            microphoneSelect.innerHTML = '<option value="">Default</option>';
+            audioInputDevices.forEach(device => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                option.textContent = device.label || `Microphone ${microphoneSelect.length}`;
+                microphoneSelect.appendChild(option);
+            });
+
+            const selectedMicrophone = localStorage.getItem('selectedMicrophone');
+            if (selectedMicrophone) {
+                microphoneSelect.value = selectedMicrophone;
+            }
+        } catch (error) {
+            console.error('Error enumerating audio devices:', error);
+            showNotification('Could not access microphones.', 'error');
+        }
+    }
+}
+
+microphoneSelect?.addEventListener('change', () => {
+    localStorage.setItem('selectedMicrophone', microphoneSelect.value);
+});
+
