@@ -1042,6 +1042,31 @@
                 </button>
             </div>
 
+            <!-- RAG Mode Configuration Section -->
+            <div style="background: var(--background); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h3>RAG Mode Configuration</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                    Choose between Simple RAG and Agentic RAG for query processing
+                </p>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="agenticRagToggle" style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="font-weight: 500;">Enable Agentic RAG (Recommended)</span>
+                    </label>
+                    <div style="margin-top: 10px; padding: 12px; background: var(--surface); border-radius: 5px; border-left: 4px solid var(--primary-color);">
+                        <p style="margin: 0; font-size: 13px; color: var(--text-secondary);">
+                            <strong>Agentic RAG:</strong> Intelligently selects tools based on query type (VectorSearch, TableQuery, DocumentDetails, etc.). Best for complex queries, numerical analysis, and multi-document research.
+                        </p>
+                        <p style="margin: 10px 0 0 0; font-size: 13px; color: var(--text-secondary);">
+                            <strong>Simple RAG:</strong> Direct vector search and retrieval. Faster for simple factual questions.
+                        </p>
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="saveRagMode()" style="margin-top: 10px;">
+                    💾 Save RAG Mode
+                </button>
+            </div>
+
             <!-- Install New Model Section -->
             <div style="background: var(--background); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
                 <h3>Install New Model</h3>
@@ -1854,6 +1879,12 @@
                 const currentData = await currentResponse.json();
                 console.log('Current config received:', currentData);
 
+                // Set RAG mode toggle
+                const agenticRagToggle = document.getElementById('agenticRagToggle');
+                if (agenticRagToggle) {
+                    agenticRagToggle.checked = currentData.use_agentic_rag !== false;
+                }
+
                 // Populate dropdowns
                 const llmSelect = document.getElementById('llmModelSelect');
                 const embeddingSelect = document.getElementById('embeddingModelSelect');
@@ -1975,6 +2006,32 @@
                 }
             } catch (error) {
                 showMessage('Error updating models: ' + error.message, 'error');
+            }
+        }
+
+        async function saveRagMode() {
+            const agenticRagToggle = document.getElementById('agenticRagToggle');
+            const useAgenticRag = agenticRagToggle.checked;
+
+            try {
+                const response = await fetch(`${API_BASE}/models/rag-mode`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        use_agentic_rag: useAgenticRag
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const ragType = useAgenticRag ? 'Agentic RAG' : 'Simple RAG';
+                    showMessage(`✅ RAG mode updated to ${ragType}!`, 'success');
+                } else {
+                    showMessage('Failed to update RAG mode: ' + data.detail, 'error');
+                }
+            } catch (error) {
+                showMessage('Error updating RAG mode: ' + error.message, 'error');
             }
         }
 

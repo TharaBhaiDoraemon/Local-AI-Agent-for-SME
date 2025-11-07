@@ -82,7 +82,7 @@ class QuestionRequest(BaseModel):
     question: str
     profile_id: str
     chat_id: Optional[str] = None
-    use_agentic_rag: Optional[bool] = True  # Default to agentic RAG
+    use_agentic_rag: Optional[bool] = None  # None means use system config
 
 class QuestionResponse(BaseModel):
     answer: str
@@ -202,17 +202,23 @@ def load_model_config():
     if not MODEL_CONFIG_FILE.exists():
         default_config = {
             "llm_model": "phi3:latest",
-            "embedding_model": "bge-m3:latest"
+            "embedding_model": "bge-m3:latest",
+            "use_agentic_rag": True
         }
         save_model_config(default_config)
         return default_config
 
     try:
         with open(MODEL_CONFIG_FILE, 'r') as f:
-            return json.load(f)
+            config = json.load(f)
+            # Ensure use_agentic_rag key exists (for backward compatibility)
+            if "use_agentic_rag" not in config:
+                config["use_agentic_rag"] = True
+                save_model_config(config)
+            return config
     except Exception as e:
         print(f"Error loading model config: {e}")
-        return {"llm_model": "phi3", "embedding_model": "bge-m3"}
+        return {"llm_model": "phi3", "embedding_model": "bge-m3", "use_agentic_rag": True}
 
 def save_model_config(config: dict):
     """Save model configuration to disk"""
@@ -638,8 +644,10 @@ async def ask_question(request: QuestionRequest):
             accessible_docs = access_control.get_user_accessible_documents(request.profile_id)
             accessible_filenames = {doc.filename for doc in accessible_docs}
 
-        # Choose RAG mode
-        if request.use_agentic_rag:
+        # Choose RAG mode (use request parameter if provided, otherwise use system config)
+        use_agentic = request.use_agentic_rag if request.use_agentic_rag is not None else current_model_config.get("use_agentic_rag", True)
+
+        if use_agentic:
             # Use Agentic RAG
             agent = get_agentic_rag(current_model_config["llm_model"])
             result = agent.query(request.question, accessible_filenames)
@@ -1669,14 +1677,15 @@ async def get_available_models():
 @app.get("/api/models/current")
 async def get_current_models():
     """
-    Get currently selected models
+    Get currently selected models and RAG mode configuration
     """
     try:
         config = load_model_config()
         return {
             "status": "success",
             "llm_model": config["llm_model"],
-            "embedding_model": config["embedding_model"]
+            "embedding_model": config["embedding_model"],
+            "use_agentic_rag": config.get("use_agentic_rag", True)
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting current models: {str(e)}")
@@ -1738,10 +1747,12 @@ async def select_models(request: ModelSelectionRequest):
                 detail=f"Embedding model '{request.embedding_model}' not found in available models"
             )
 
-        # Update config
+        # Update config (preserve RAG mode setting)
+        current_config = load_model_config()
         config = {
             "llm_model": request.llm_model,
-            "embedding_model": request.embedding_model
+            "embedding_model": request.embedding_model,
+            "use_agentic_rag": current_config.get("use_agentic_rag", True)
         }
         save_model_config(config)
 
@@ -1762,6 +1773,45 @@ async def select_models(request: ModelSelectionRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error updating models: {str(e)}")
+
+@app.post("/api/models/rag-mode")
+async def update_rag_mode(request: dict):
+    """
+    Update the RAG mode (agentic or simple)
+    """
+    try:
+        use_agentic_rag = request.get("use_agentic_rag")
+
+        if use_agentic_rag is None:
+            raise HTTPException(status_code=400, detail="use_agentic_rag parameter is required")
+
+        if not isinstance(use_agentic_rag, bool):
+            raise HTTPException(status_code=400, detail="use_agentic_rag must be a boolean")
+
+        # Update config (preserve model settings)
+        current_config = load_model_config()
+        config = {
+            "llm_model": current_config.get("llm_model", "phi3:latest"),
+            "embedding_model": current_config.get("embedding_model", "bge-m3:latest"),
+            "use_agentic_rag": use_agentic_rag
+        }
+        save_model_config(config)
+
+        # Update global config
+        global current_model_config
+        current_model_config = config
+
+        rag_type = "Agentic RAG" if use_agentic_rag else "Simple RAG"
+
+        return {
+            "status": "success",
+            "message": f"RAG mode updated to {rag_type}",
+            "use_agentic_rag": use_agentic_rag
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating RAG mode: {str(e)}")
 
 # Table Operations Endpoints
 @app.post("/api/table/query")
